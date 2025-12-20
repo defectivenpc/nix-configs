@@ -18,6 +18,10 @@
         if [ -f "$HOME/.secrets.env" ]; then
           source "$HOME/.secrets.env"
         fi
+
+        if [ -f "$HOME/.extra.env" ]; then
+          source "$HOME/.extra.env"
+        fi
       '';
       shellAliases = {
         ls = "lsd";
