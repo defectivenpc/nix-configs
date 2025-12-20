@@ -68,3 +68,8 @@ end, { desc = "Copy Git link (line)" })
 vim.keymap.set("v", "<leader>gy", function()
 	gitlinker.get_buf_range_url("v", { action_callback = gitlinker.actions.copy_to_clipboard })
 end, { desc = "Copy Git link (range)" })
+
+-- GITLAB
+require("gitlab_glab").setup({
+	prefix = "<leader>m", -- optional
+})
