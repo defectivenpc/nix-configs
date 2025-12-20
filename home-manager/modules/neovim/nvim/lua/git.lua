@@ -74,4 +74,4 @@ require("gitlab_glab").setup({
 	prefix = "<leader>m", -- optional
 })
 
-require("gitlab").setup({})
+require("diffview")

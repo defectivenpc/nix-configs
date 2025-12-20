@@ -127,7 +127,8 @@ in
       vim-nickel
       nvim-treesitter-parsers.nickel
       gitlinker-nvim
-      gitlab-nvim
+      diffview-nvim
+      #gitlab-nvim
 
     ];
   };
