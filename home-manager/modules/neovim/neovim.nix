@@ -101,6 +101,7 @@ in
       #markdown-preview-nvim
       vim-nickel
       nvim-treesitter-parsers.nickel
+      gitlinker-nvim
     ];
   };
   xdg.configFile.nvim.source = ./nvim;

@@ -12,6 +12,8 @@
   ];
 
   home.packages = with pkgs; [
+    kanidm_1_7
+    age-plugin-yubikey
     tflint
     taplo
     k9s
@@ -51,7 +53,12 @@
     nickel
     nls
     nix-converter
+    glab
   ];
+
+  home.sessionVariables = {
+    SOPS_AGE_KEY_FILE = "$HOME/.config/sops/age/keys.txt";
+  };
 
   programs = {
     ssh.forwardAgent = true;

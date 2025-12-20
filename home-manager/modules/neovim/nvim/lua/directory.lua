@@ -102,6 +102,11 @@ tree_api.setup({
 			return math.floor(vim.opt.columns:get() * WIDTH_RATIO)
 		end,
 	},
+	update_focused_file = {
+		enable = true,
+		update_root = false, -- keep project root stable
+	},
+	respect_buf_cwd = true,
 })
 
 vim.api.nvim_create_augroup("NvimTreeResize", {
