@@ -5,23 +5,18 @@
   ...
 }:
 let
-  fromGitHub =
+  fromGitSrc =
     {
-      repo,
-      ref,
-      rev,
+      src,
+      name,
       deps ? [ ],
       checks ? [ ],
     }:
     pkgs.vimUtils.buildVimPlugin {
-      pname = lib.strings.sanitizeDerivationName repo;
-      version = ref;
+      pname = lib.strings.sanitizeDerivationName name;
+      version = src.ref;
 
-      src = builtins.fetchGit {
-        url = "https://github.com/${repo}.git";
-        ref = ref;
-        rev = rev;
-      };
+      src = builtins.fetchGit src;
 
       # Key bit: make require-check “see” dependent plugins
       propagatedBuildInputs = deps;
@@ -30,15 +25,36 @@ let
       nvimRequireCheck = checks;
     };
 
+  gitlabNvimSrc = {
+    url = "https://github.com/harrisoncramer/gitlab.nvim.git";
+    ref = "v3.4.0";
+    rev = "e29909cd1064a7b53c3150bff49449a548dadf8d";
+  };
+
   gitlab-nvim =
-    (fromGitHub {
-      repo = "harrisoncramer/gitlab.nvim";
-      ref = "v3.4.0";
-      rev = "e29909cd1064a7b53c3150bff49449a548dadf8d";
+    (fromGitSrc {
+      name = "gitlab-nvim";
+      src = gitlabNvimSrc;
     }).overrideAttrs
       (_: {
         doCheck = false;
       });
+
+  gitlabNvimBin = pkgs.buildGoModule {
+    pname = "gitlab-nvim-server";
+    version = gitlabNvimSrc.ref;
+    src = builtins.fetchGit gitlabNvimSrc;
+
+    # you must set these correctly for the repo layout:
+    subPackages = [ "cmd" ];
+
+    vendorHash = "sha256-wYlFmarpITuM+s9czQwIpE1iCJje7aCe0w7/THm+524=";
+
+    postInstall = ''
+      # rename the Go output binary
+      mv "$out/bin/cmd" "$out/bin/gitlab-nvim-server"
+    '';
+  };
 
   avante-latest = pkgs.vimPlugins.avante-nvim.overrideAttrs (_old: {
     version = "git-latest";
@@ -78,7 +94,7 @@ in
       stylua
       nixfmt-rfc-style
       cuelsp
-      go
+      gitlabNvimBin
     ];
     plugins = with pkgs.vimPlugins; [
       nvim-lspconfig
@@ -128,7 +144,7 @@ in
       nvim-treesitter-parsers.nickel
       gitlinker-nvim
       diffview-nvim
-      #gitlab-nvim
+      gitlab-nvim
 
     ];
   };

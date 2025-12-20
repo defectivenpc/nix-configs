@@ -70,8 +70,25 @@ vim.keymap.set("v", "<leader>gy", function()
 end, { desc = "Copy Git link (range)" })
 
 -- GITLAB
-require("gitlab_glab").setup({
-	prefix = "<leader>m", -- optional
-})
+local init = vim.api.nvim_get_runtime_file("lua/gitlab/init.lua", false)[1]
+if not init then
+	error("gitlab.nvim: couldn't locate lua/gitlab/init.lua on runtimepath")
+end
+
+local state = require("gitlab.state")
+
+local root = vim.fn.fnamemodify(init, ":h:h:h")
+state.settings.root_path = root
+
+-- OVERWRITE binary settings for gitlab nvim
+local ok, server = pcall(require, "gitlab.server")
+if ok then
+	server.build = function(_)
+		return true
+	end
+
+	state.settings.bin = vim.fn.exepath("gitlab-nvim-server")
+end
 
 require("diffview")
+require("gitlab").setup()
