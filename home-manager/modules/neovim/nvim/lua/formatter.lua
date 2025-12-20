@@ -13,6 +13,7 @@ require("conform").setup({
 		scss = { "prettierd", "prettier" },
 		html = { "htmlbeautifier" },
 		toml = { "taplo" },
+		nix = { "nixfmt" },
 	},
 	format_on_save = {
 		timeout_ms = 500,
