@@ -73,3 +73,5 @@ end, { desc = "Copy Git link (range)" })
 require("gitlab_glab").setup({
 	prefix = "<leader>m", -- optional
 })
+
+require("gitlab").setup({})

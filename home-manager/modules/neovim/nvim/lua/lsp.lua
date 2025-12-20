@@ -65,14 +65,16 @@ lspconfig.nixd.setup({
 	cmd = { "nixd" },
 	filetypes = { "nix" },
 	root_markers = { "flake.nix", ".git" },
+	root_dir = { "flake.nix", ".git" },
 	on_attach = function(client, buffer)
 		client.server_capabilities.documentFormattingProvider = false
 		client.server_capabilities.documentRangeFormattingProvider = false
 	end,
+	capabilities = capabilities,
 	settings = {
 		nixd = {
 			nixpkgs = {
-				expr = "(builtins.getFlake (toString ./.)).inputs.nixpkgs { }",
+				expr = "import ((builtins.getFlakes (toString ./.)).inputs.nixpkgs.outPath) { system = builtins.currentSystem; }",
 			},
 			flake = {
 				autoArchive = true,

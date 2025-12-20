@@ -6,15 +6,39 @@
 }:
 let
   fromGitHub =
-    ref: repo:
+    {
+      repo,
+      ref,
+      rev,
+      deps ? [ ],
+      checks ? [ ],
+    }:
     pkgs.vimUtils.buildVimPlugin {
-      pname = "${lib.strings.sanitizeDerivationName repo}";
+      pname = lib.strings.sanitizeDerivationName repo;
       version = ref;
+
       src = builtins.fetchGit {
         url = "https://github.com/${repo}.git";
         ref = ref;
+        rev = rev;
       };
+
+      # Key bit: make require-check “see” dependent plugins
+      propagatedBuildInputs = deps;
+      dependencies = deps;
+
+      nvimRequireCheck = checks;
     };
+
+  gitlab-nvim =
+    (fromGitHub {
+      repo = "harrisoncramer/gitlab.nvim";
+      ref = "v3.4.0";
+      rev = "e29909cd1064a7b53c3150bff49449a548dadf8d";
+    }).overrideAttrs
+      (_: {
+        doCheck = false;
+      });
 
   avante-latest = pkgs.vimPlugins.avante-nvim.overrideAttrs (_old: {
     version = "git-latest";
@@ -54,6 +78,7 @@ in
       stylua
       nixfmt-rfc-style
       cuelsp
+      go
     ];
     plugins = with pkgs.vimPlugins; [
       nvim-lspconfig
@@ -102,6 +127,8 @@ in
       vim-nickel
       nvim-treesitter-parsers.nickel
       gitlinker-nvim
+      gitlab-nvim
+
     ];
   };
   xdg.configFile.nvim.source = ./nvim;

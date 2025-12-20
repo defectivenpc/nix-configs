@@ -7,6 +7,8 @@
       theme = "catppuccin-macchiato";
       default_layout = "compact";
       show_startup_tips = false;
+      mouse_mode = true;
+      copy_on_select = true;
       keybinds = {
         unbind = [
           "Ctrl g"
