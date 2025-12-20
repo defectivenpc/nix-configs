@@ -54,7 +54,7 @@
     nls
     nix-converter
     glab
-    nixfmt
+    nixfmt-rfc-style
   ];
 
   home.sessionVariables = {
