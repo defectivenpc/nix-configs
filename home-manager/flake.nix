@@ -22,6 +22,7 @@
   outputs =
     {
       nixpkgs,
+      nixpkgs-unstable,
       home-manager,
       cosmic-manager,
       nixpkgs-unstable,
@@ -29,13 +30,21 @@
     }:
     let
       system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
-      pkgs-unstable = import nixpkgs-unstable { inherit system; };
+      pkgs = (import nixpkgs) {
+        inherit system;
+      };
+      pkgs-unstable = import nixpkgs-unstable {
+        inherit system;
+        config.allowUnfree = true;
+      };
     in
     {
       homeConfigurations."whitehead" = home-manager.lib.homeManagerConfiguration {
         pkgs = pkgs;
 
+        extraSpecialArgs = {
+          inherit pkgs-unstable;
+        };
         modules = [
           ./home.nix
           cosmic-manager.homeManagerModules.cosmic-manager

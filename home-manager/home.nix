@@ -2,6 +2,7 @@
   config,
   pkgs,
   extra,
+  pkgs-unstable,
   cosmicLib,
   ...
 }:
@@ -108,7 +109,7 @@
     wireguard-tools
     screen
     hugo
-    davinci-resolve-studio
+    pkgs-unstable.davinci-resolve-studio
   ];
 
   home.pointerCursor = {
