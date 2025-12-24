@@ -2,9 +2,11 @@
 {
   programs.git = {
     enable = true;
-    userEmail = "onepunchlinux@gmail.com";
-    userName = "Michael Whitehead";
-    extraConfig = {
+    settings = {
+
+      user.email = "onepunchlinux@gmail.com";
+      user.name = "Michael Whitehead";
+
       core = {
         autocrlf = false;
         safecrlf = false;

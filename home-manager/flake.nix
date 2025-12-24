@@ -2,7 +2,7 @@
   description = "Home Manager configuration of whitehead";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     cosmic-manager = {
       url = "github:HeitorAugustoLN/cosmic-manager";
@@ -12,7 +12,7 @@
       };
     };
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.05";
+      url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     emacs-overlay.url = "github:nix-community/emacs-overlay";
@@ -25,7 +25,6 @@
       nixpkgs-unstable,
       home-manager,
       cosmic-manager,
-      nixpkgs-unstable,
       ...
     }:
     let

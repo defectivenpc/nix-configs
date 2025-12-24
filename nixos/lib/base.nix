@@ -44,7 +44,7 @@
     git
     tree
     home-manager
-    firmwareLinuxNonfree
+    linux-firmware
     yubikey-manager
     mdadm
     pciutils
@@ -67,7 +67,7 @@
     dejavu_fonts
     noto-fonts
     noto-fonts-cjk-sans
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     font-awesome_5
   ];
 

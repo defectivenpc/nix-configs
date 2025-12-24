@@ -1,5 +1,6 @@
 { pkgs, ... }:
 {
 
-  users.defaultUserShell = pkgs.nushell;
+  users.defaultUserShell = pkgs.zsh;
+  programs.zsh.enable = true;
 }

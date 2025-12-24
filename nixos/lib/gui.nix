@@ -37,10 +37,19 @@
   ];
 
   services = {
+    displayManager = {
+      cosmic-greeter.enable = true;
+
+    };
+    desktopManager = {
+      cosmic.enable = true;
+    };
+
+    system76-scheduler.enable = true;
     xserver = {
       enable = true;
-      displayManager.gdm.enable = true;
-      desktopManager.gnome.enable = true;
+      displayManager.gdm.enable = false;
+      desktopManager.gnome.enable = false;
     };
     pipewire = {
       enable = true;

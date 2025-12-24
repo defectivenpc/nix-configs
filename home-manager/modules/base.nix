@@ -5,7 +5,6 @@
     ./neovim
     ./ghostty.nix
     ./git.nix
-    ./nushell
     ./zellij.nix
     ./zsh.nix
     ./development/java.nix
