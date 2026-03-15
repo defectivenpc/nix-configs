@@ -2,6 +2,10 @@
 
 {
 
+  imports = [
+    ./hyprland
+  ];
+
   home.packages = with pkgs; [
     traceroute
     audacity
@@ -56,5 +60,6 @@
     screen
     hugo
     pkgs-unstable.davinci-resolve-studio
+    gamescope
   ];
 }

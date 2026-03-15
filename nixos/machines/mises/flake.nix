@@ -14,6 +14,8 @@
     disko.inputs.nixpkgs.follows = "nixpkgs";
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager.url = "github:nix-community/home-manager/release-25.11";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
@@ -25,12 +27,18 @@
       nixos-facter-modules,
       disko,
       sops-nix,
+      home-manager,
       ...
     }@inputs:
 
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+
+      pkgs-unstable = import nixpkgs-unstable {
+        inherit system;
+        config.allowUnfree = true;
+      };
     in
     {
 
@@ -55,7 +63,14 @@
             sops-nix.nixosModules.sops
             nixos-facter-modules.nixosModules.facter
             disko.nixosModules.disko
+            home-manager.nixosModules.home-manager
             { config.facter.reportPath = ../../hardware/facter/mises.json; }
+            {
+              home-manager.users.whitehead = import ../../../home-manager/home.nix;
+              home-manager.extraSpecialArgs = {
+                inherit pkgs-unstable;
+              };
+            }
             ./disko.nix
             ./mises.nix
           ];

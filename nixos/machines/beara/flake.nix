@@ -35,7 +35,7 @@
     {
 
       nixosConfigurations = {
-        mises = nixpkgs.lib.nixosSystem rec {
+        beara = nixpkgs.lib.nixosSystem rec {
           system = "x86_64-linux";
           modules = [
             {

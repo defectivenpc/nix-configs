@@ -59,30 +59,7 @@ for type, icon in pairs(signs) do
 	vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
 end
 
-local lspconfig = require("lspconfig")
-
-lspconfig.nixd.setup({
-	cmd = { "nixd" },
-	filetypes = { "nix" },
-	root_markers = { "flake.nix", ".git" },
-	root_dir = { "flake.nix", ".git" },
-	on_attach = function(client, buffer)
-		client.server_capabilities.documentFormattingProvider = false
-		client.server_capabilities.documentRangeFormattingProvider = false
-	end,
-	capabilities = capabilities,
-	settings = {
-		nixd = {
-			nixpkgs = {
-				expr = "import ((builtins.getFlakes (toString ./.)).inputs.nixpkgs.outPath) { system = builtins.currentSystem; }",
-			},
-			flake = {
-				autoArchive = true,
-			},
-		},
-	},
-})
-lspconfig.lua_ls.setup({
+vim.lsp.config("lua_ls", {
 	settings = {
 		Lua = {
 			-- make the language server recognize "vim" global
@@ -95,26 +72,29 @@ lspconfig.lua_ls.setup({
 		},
 	},
 })
-lspconfig.terraform_lsp.setup({})
-lspconfig.ts_ls.setup({})
-lspconfig.yamlls.setup({})
-lspconfig.jsonls.setup({})
-lspconfig.bashls.setup({})
-lspconfig.docker_compose_language_service.setup({})
-lspconfig.dockerls.setup({})
-lspconfig.dhall_lsp_server.setup({})
-lspconfig.helm_ls.setup({})
+
+vim.lsp.enable("nixd")
+vim.lsp.enable("lua_ls")
+vim.lsp.enable("terraform_lsp")
+vim.lsp.enable("ts_ls")
+vim.lsp.enable("yamlls")
+vim.lsp.enable("jsonls")
+vim.lsp.enable("bashls")
+vim.lsp.enable("docker_compose_language_service")
+vim.lsp.enable("dockerls")
+vim.lsp.enable("dhall_lsp_server")
+vim.lsp.enable("helm_ls")
 vim.cmd([[
 autocmd BufRead,BufNewFile */templates/*.yaml,*/templates/*.tpl,*.gotmpl,helmfile*.yaml set ft=helm
 ]])
-lspconfig.marksman.setup({})
-lspconfig.ltex.setup({})
-lspconfig.nushell.setup({})
-lspconfig["hls"].setup({
+vim.lsp.enable("marksman")
+vim.lsp.enable("ltex")
+vim.lsp.enable("nushell")
+vim.lsp.config("hls", {
 	filetypes = { "haskell", "lhaskell", "cabal" },
 })
 
-lspconfig.rust_analyzer.setup({
+vim.lsp.config("rust_analyzer", {
 	settings = {
 		["rust-analyzer"] = {
 			diagnostics = {
@@ -123,6 +103,9 @@ lspconfig.rust_analyzer.setup({
 		},
 	},
 })
+
+vim.lsp.enable("hls")
+vim.lsp.enable("rust_analyzer")
 
 local trouble = require("trouble")
 trouble.setup({})

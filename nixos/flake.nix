@@ -2,7 +2,8 @@
   description = "My NixOS flake";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
     nixos-generators = {
@@ -13,6 +14,8 @@
     disko.inputs.nixpkgs.follows = "nixpkgs";
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager.url = "github:nix-community/home-manager/release-25.11";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
@@ -24,6 +27,7 @@
       nixos-facter-modules,
       disko,
       sops-nix,
+      home-manager,
       ...
     }@inputs:
 
@@ -31,10 +35,16 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
 
+      pkgs-unstable = import nixpkgs-unstable {
+        inherit system;
+        config.allowUnfree = true;
+      };
+
     in
     {
 
       nixosConfigurations = {
+
         mises = nixpkgs.lib.nixosSystem rec {
           system = "x86_64-linux";
           modules = [
@@ -47,18 +57,60 @@
                   };
                 })
               ];
+              nix.settings = {
+                substituters = [ "https://cosmic.cachix.org/" ];
+                trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
+              };
             }
             sops-nix.nixosModules.sops
             nixos-facter-modules.nixosModules.facter
             disko.nixosModules.disko
-            {
-              _module.args.disks = [ "/dev/nvme0n1" ];
-            }
+            home-manager.nixosModules.home-manager
             { config.facter.reportPath = ./hardware/facter/mises.json; }
-            ./disko/basic.nix
-            ./mises.nix
+            {
+              home-manager.users.whitehead = import ../home-manager/home.nix;
+              home-manager.extraSpecialArgs = {
+                inherit pkgs-unstable;
+              };
+            }
+            ./machines/mises/disko.nix
+            ./machines/mises/mises.nix
           ];
         };
+
+        beara = nixpkgs.lib.nixosSystem rec {
+          system = "x86_64-linux";
+          modules = [
+            {
+              nixpkgs.overlays = [
+                (final: prev: {
+                  unstable = import nixpkgs-unstable {
+                    inherit system;
+                    config.allowUnfree = true;
+                  };
+                })
+              ];
+              nix.settings = {
+                substituters = [ "https://cosmic.cachix.org/" ];
+                trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
+              };
+            }
+            sops-nix.nixosModules.sops
+            nixos-facter-modules.nixosModules.facter
+            disko.nixosModules.disko
+            home-manager.nixosModules.home-manager
+            { config.facter.reportPath = ./hardware/facter/beara.json; }
+            {
+              home-manager.users.whitehead = import ../home-manager/home.nix;
+              home-manager.extraSpecialArgs = {
+                inherit pkgs-unstable;
+              };
+            }
+            ./machines/beara/disko.nix
+            ./machines/beara/beara.nix
+          ];
+        };
+
         bob = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = [
@@ -99,19 +151,6 @@
             }
             ./disko/basic.nix
             ./machines/router.nix
-          ];
-        };
-        beara = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          modules = [
-            nixos-facter-modules.nixosModules.facter
-            disko.nixosModules.disko
-            { config.facter.reportPath = ./hardware/facter/beara.json; }
-            {
-              _module.args.disks = [ "/dev/nvme0n1" ];
-            }
-            ./disko/beara.nix
-            ./beara.nix
           ];
         };
 

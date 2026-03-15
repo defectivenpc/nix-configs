@@ -11,6 +11,11 @@
     libsForQt5.qt5.qtwayland
     kdePackages.qtwayland
     wl-clipboard
+    brave
+    gamescope
+    gamemode
+    mangohud
+    protonup-qt
   ];
 
   nixpkgs.overlays = [
@@ -38,19 +43,16 @@
 
   services = {
     displayManager = {
-      cosmic-greeter.enable = true;
+      gdm.enable = true;
 
     };
     desktopManager = {
       cosmic.enable = true;
+      gnome.enable = true;
+      plasma6.enable = true;
     };
 
     system76-scheduler.enable = true;
-    xserver = {
-      enable = true;
-      displayManager.gdm.enable = false;
-      desktopManager.gnome.enable = false;
-    };
     pipewire = {
       enable = true;
       alsa.enable = true;
@@ -61,14 +63,16 @@
 
   programs.hyprland = {
     enable = true;
-    withUWSM = true;
     xwayland.enable = true;
   };
+
+  programs.gamemode.enable = true;
 
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
+    gamescopeSession.enable = true;
   };
 
   networking.firewall = {

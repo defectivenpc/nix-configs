@@ -11,7 +11,7 @@
   ];
 
   home.packages = with pkgs; [
-    kanidm_1_7
+    kanidm_1_9
     age-plugin-yubikey
     tflint
     taplo
@@ -61,7 +61,7 @@
   };
 
   programs = {
-    ssh.forwardAgent = true;
+    ssh.matchBlocks."*".forwardAgent = true;
     direnv = {
       enable = true;
       enableZshIntegration = true;

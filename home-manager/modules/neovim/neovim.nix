@@ -83,7 +83,7 @@ in
       typescript-language-server
       yaml-language-server
       nodePackages.bash-language-server
-      dockerfile-language-server-nodejs
+      dockerfile-language-server
       docker-compose-language-service
       dhall-lsp-server
       helm-ls

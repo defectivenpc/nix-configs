@@ -12,6 +12,7 @@
   imports = [
     ./modules/base.nix
     ./modules/linux
+    ./modules/personal
   ];
 
   nixpkgs = {
@@ -45,27 +46,20 @@
   #   EDITOR = "emc";
   # };
 
-  programs = {
-    waybar.enable = true;
+  # services = {
+  #   hypridle.enable = true;
+  # emacs = {
+  #   enable = true;
+  #   socketActivation.enable = true;
+  #   client.enable = true;
+  # };
+  # };
 
-  };
-
-  services = {
-    hypridle.enable = true;
-    # emacs = {
-    #   enable = true;
-    #   socketActivation.enable = true;
-    #   client.enable = true;
-    # };
-  };
-
-  xdg.configFile."waybar/config".source = ./rawConfigs/waybar/waybar.conf;
-  xdg.configFile."wofi/style.css".source = ./rawConfigs/wofi/style.css;
-  xdg.configFile."waybar/style.css".source = ./rawConfigs/waybar/style.css;
-  xdg.configFile."hypr/hyprland.conf".source = ./rawConfigs/hypr/hyprland.conf;
-  xdg.configFile."nixpkgs/config.nix".source = ./rawConfigs/nixpkgs/config.nix;
+  #xdg.configFile."waybar/config".source = ./rawConfigs/waybar/waybar.conf;
+  #xdg.configFile."wofi/style.css".source = ./rawConfigs/wofi/style.css;
+  #xdg.configFile."waybar/style.css".source = ./rawConfigs/waybar/style.css;
+  #xdg.configFile."hypr/hyprland.conf".source = ./rawConfigs/hypr/hyprland.conf;
+  #xdg.configFile."nixpkgs/config.nix".source = ./rawConfigs/nixpkgs/config.nix;
 
   manual.manpages.enable = false;
-
-  wayland.desktopManager.cosmic.shortcuts = [ ];
 }

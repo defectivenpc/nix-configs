@@ -5,7 +5,8 @@
     enableZshIntegration = true;
 
     settings = {
-      theme = "dark:Catppuccin Mocha,light:Catppuccin Latte";
+      theme = "dark:Catppuccin Mocha,light:Catppuccin Mocha";
+
       font-size = 14;
       quit-after-last-window-closed = true;
       keybind = [
