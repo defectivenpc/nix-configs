@@ -25,6 +25,12 @@
     };
   };
 
+  home.file.".config/nixpkgs/config.nix".text = ''
+    { 
+      allowUnfree = true;
+    }
+  '';
+
   home.stateVersion = "24.05";
   home.homeDirectory = "/home/whitehead";
   home.username = "whitehead";

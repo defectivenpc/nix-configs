@@ -11,7 +11,6 @@
   ];
 
   home.packages = with pkgs; [
-    kanidm_1_9
     age-plugin-yubikey
     tflint
     taplo
