@@ -1,10 +1,6 @@
 vim.o.termguicolors = true
 
-require("catppuccin").setup({
-	flavour = "mocha",
-})
-
-vim.cmd.colorscheme("catppuccin-mocha")
+vim.cmd.colorscheme("gruvbox")
 
 require("global")
 require("tree-sitter")

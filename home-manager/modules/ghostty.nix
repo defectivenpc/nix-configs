@@ -1,16 +1,16 @@
-{ ... }:
+{ pkgs, ... }:
 {
   programs.ghostty = {
     enable = true;
     enableZshIntegration = true;
 
-    settings = {
-      theme = "dark:Catppuccin Mocha,light:Catppuccin Mocha";
+    package = pkgs.ghostty-bin;
 
+    settings = {
+      theme = "light:Gruvbox Material Light,dark: Gruvbox Material Dark";
       font-size = 14;
       quit-after-last-window-closed = true;
       keybind = [
-        "cmd+c=text:\\x03"
         "cmd+a=text:\\x01"
         "cmd+b=text:\\x02"
         "cmd+c=text:\\x03"
@@ -39,6 +39,7 @@
         "cmd+z=text:\\x1A"
         "cmd+shift+c=copy_to_clipboard"
         "cmd+shift+v=paste_from_clipboard"
+        "shift+enter=text:\\n"
       ];
     };
 

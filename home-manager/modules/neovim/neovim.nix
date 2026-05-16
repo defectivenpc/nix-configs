@@ -101,6 +101,7 @@ in
       plenary-nvim
       nvim-treesitter.withAllGrammars
       catppuccin-nvim
+      gruvbox-nvim
       oil-nvim
       lualine-nvim
       telescope-nvim

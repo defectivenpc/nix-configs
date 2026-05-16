@@ -72,9 +72,8 @@ vim.lsp.config("lua_ls", {
 		},
 	},
 })
-
-vim.lsp.enable("nixd")
 vim.lsp.enable("lua_ls")
+
 vim.lsp.enable("terraform_lsp")
 vim.lsp.enable("ts_ls")
 vim.lsp.enable("yamlls")
@@ -93,6 +92,7 @@ vim.lsp.enable("nushell")
 vim.lsp.config("hls", {
 	filetypes = { "haskell", "lhaskell", "cabal" },
 })
+vim.lsp.enable("hls")
 
 vim.lsp.config("rust_analyzer", {
 	settings = {
@@ -103,6 +103,7 @@ vim.lsp.config("rust_analyzer", {
 		},
 	},
 })
+vim.lsp.enable("rust_analyzer")
 
 vim.lsp.enable("hls")
 vim.lsp.enable("rust_analyzer")
