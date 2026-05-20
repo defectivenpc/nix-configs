@@ -26,7 +26,6 @@
       shellAliases = {
         ls = "lsd";
         ll = "ls -l";
-        z = "zellij -l welcome";
       };
       #plugins = [
       # {

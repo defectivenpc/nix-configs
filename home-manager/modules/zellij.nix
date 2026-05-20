@@ -1,10 +1,35 @@
-{ ... }:
+{ pkgs, ... }:
 {
+  home.packages = [
+    (pkgs.writeShellScriptBin "z" ''
+      is_dark() {
+        if [[ "$(uname)" == "Darwin" ]]; then
+          defaults read -g AppleInterfaceStyle 2>/dev/null | grep -q Dark
+        else
+          result=$(dbus-send --session --print-reply=literal \
+            --dest=org.freedesktop.portal.Desktop \
+            /org/freedesktop/portal/desktop \
+            org.freedesktop.portal.Settings.Read \
+            string:'org.freedesktop.appearance' \
+            string:'color-scheme' 2>/dev/null)
+          # color-scheme: 0=default, 1=dark, 2=light
+          echo "$result" | grep -q "uint32 1"
+        fi
+      }
+
+      if is_dark; then
+        exec zellij -l welcome options --theme gruvbox-dark "$@"
+      else
+        exec zellij -l welcome options --theme gruvbox-light "$@"
+      fi
+    '')
+
+  ];
   programs.zellij = {
     enable = true;
     settings = {
       pane_frames = false;
-      theme = "catppuccin-macchiato";
+      theme = "gruvbox-dark";
       default_layout = "compact";
       show_startup_tips = false;
       mouse_mode = true;

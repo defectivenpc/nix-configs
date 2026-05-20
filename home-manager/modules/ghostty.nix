@@ -4,7 +4,7 @@
     enable = true;
     enableZshIntegration = true;
 
-    package = pkgs.ghostty-bin;
+    package = if pkgs.stdenv.isDarwin then pkgs.ghostty-bin else pkgs.ghostty;
 
     settings = {
       theme = "light:Gruvbox Material Light,dark: Gruvbox Material Dark";
