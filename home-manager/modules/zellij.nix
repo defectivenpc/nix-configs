@@ -33,6 +33,7 @@
       default_layout = "compact";
       show_startup_tips = false;
       mouse_mode = true;
+      session_serialization = true;
       copy_on_select = true;
       keybinds = {
         unbind = [

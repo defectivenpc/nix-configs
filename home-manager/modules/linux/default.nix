@@ -37,7 +37,6 @@
     pulseaudio
     brave
     chromium
-    librewolf
     ltex-ls
     libreoffice
     vlc

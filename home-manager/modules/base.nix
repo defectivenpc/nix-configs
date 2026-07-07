@@ -60,7 +60,11 @@
   };
 
   programs = {
-    ssh.matchBlocks."*".forwardAgent = true;
+    ssh = {
+      enable = true;
+      matchBlocks."*".forwardAgent = true;
+    };
+
     direnv = {
       enable = true;
       enableZshIntegration = true;
