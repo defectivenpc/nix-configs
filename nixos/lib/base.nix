@@ -2,6 +2,10 @@
 
 {
 
+  imports = [ ./auto-update.nix ];
+
+  services.nixAutoUpdate.enable = true;
+
   nixpkgs.config.allowUnfree = true;
 
   boot = {
