@@ -108,6 +108,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-netbird": {
+      "locked": {
+        "lastModified": 1781895051,
+        "narHash": "sha256-KQMAIgVev2rh1guhl3mLl3rRIMIRYQkgV7moakDrAJA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ce4782aae889ce0f1ab3cfcfe6193ec294580d84",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ce4782aae889ce0f1ab3cfcfe6193ec294580d84",
+        "type": "github"
+      }
+    },
     "nixpkgs-unstable": {
       "locked": {
         "lastModified": 1781577229,
@@ -131,6 +147,7 @@
         "nixos-facter-modules": "nixos-facter-modules",
         "nixos-generators": "nixos-generators",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-netbird": "nixpkgs-netbird",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "sops-nix": "sops-nix"
       }

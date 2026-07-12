@@ -57,6 +57,7 @@
 
   home.sessionVariables = {
     SOPS_AGE_KEY_FILE = "$HOME/.config/sops/age/keys.txt";
+    SSH_AUTH_SOCK = "$XDG_RUNTIME_DIR/piv-agent/ssh.socket";
   };
 
   programs = {
@@ -88,5 +89,4 @@
     };
   };
 
-  services.yubikey-agent.enable = true;
 }

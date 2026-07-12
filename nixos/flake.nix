@@ -5,6 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
 
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-netbird.url = "github:NixOS/nixpkgs/ce4782aae889ce0f1ab3cfcfe6193ec294580d84";
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
     nixos-generators = {
       url = "github:nix-community/nixos-generators";
@@ -23,6 +24,7 @@
       self,
       nixpkgs,
       nixpkgs-unstable,
+      nixpkgs-netbird,
       nixos-generators,
       nixos-facter-modules,
       disko,
@@ -55,6 +57,10 @@
                     inherit system;
                     config.allowUnfree = true;
                   };
+                  netbird-pinned = (import nixpkgs-netbird {
+                    inherit system;
+                    config.allowUnfree = true;
+                  }).netbird;
                 })
               ];
               nix.settings = {

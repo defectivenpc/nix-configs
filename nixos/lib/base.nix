@@ -48,6 +48,7 @@
     yubikey-manager
     mdadm
     pciutils
+    usbutils
     sops
     step-cli
     xkcdpass
@@ -57,11 +58,38 @@
     mbuffer
     smartmontools
     pv
+    piv-agent
   ];
 
   services.pcscd.enable = true;
   services.udev.packages = [ pkgs.yubikey-personalization ];
-  services.yubikey-agent.enable = true;
+
+  systemd.user.sockets.piv-agent = {
+    description = "piv-agent socket activation";
+    socketConfig = {
+      ListenStream = "%t/piv-agent/ssh.socket";
+      SocketMode = "0600";
+      DirectoryMode = "0700";
+      RuntimeDirectory = "piv-agent";
+    };
+    wantedBy = [ "sockets.target" ];
+  };
+
+  systemd.user.services.piv-agent = {
+    description = "piv-agent service";
+    requires = [ "piv-agent.socket" ];
+    after = [ "piv-agent.socket" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.piv-agent}/bin/piv-agent serve --agent-types=ssh=0";
+      Type = "simple";
+    };
+  };
+
+  environment.extraInit = ''
+    if [ -z "$SSH_AUTH_SOCK" -a -n "$XDG_RUNTIME_DIR" ]; then
+      export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/piv-agent/ssh.socket"
+    fi
+  '';
 
   fonts.packages = with pkgs; [
     dejavu_fonts
