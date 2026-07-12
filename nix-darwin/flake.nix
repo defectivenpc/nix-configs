@@ -1,10 +1,13 @@
 {
-  description = "Example nix-darwin system flake";
+  description = "Darwin system flake for whitehead's mac";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     nix-darwin.url = "github:nix-darwin/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager.url = "github:nix-community/home-manager/master";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
@@ -12,37 +15,34 @@
       self,
       nix-darwin,
       nixpkgs,
+      nixpkgs-unstable,
+      home-manager,
     }:
     let
+      system = "aarch64-darwin";
+      pkgs-unstable = import nixpkgs-unstable {
+        inherit system;
+        config.allowUnfree = true;
+      };
+
       configuration =
         { pkgs, ... }:
         {
           imports = [
             ../modules/base.nix
           ];
-          # List packages installed in system profile. To search by name, run:
-          # $ nix-env -qaP | grep wget
           environment.systemPackages = with pkgs; [
             neovim
             home-manager
             ghostty-bin
           ];
 
-          # Necessary for using flakes on this system.
           nix.settings.experimental-features = "nix-command flakes";
 
-          # Enable alternative shell support in nix-darwin.
-          # programs.fish.enable = true;
-
-          # Set Git commit hash for darwin-version.
           system.configurationRevision = self.rev or self.dirtyRev or null;
-
-          # Used for backwards compatibility, please read the changelog before changing.
-          # $ darwin-rebuild changelog
           system.stateVersion = 6;
 
-          # The platform the configuration will be used on.
-          nixpkgs.hostPlatform = "aarch64-darwin";
+          nixpkgs.hostPlatform = system;
 
           system.primaryUser = "whitehead";
           system.defaults.dock = {
@@ -78,7 +78,7 @@
               shift + alt - l : yabai -m window --swap east
               shift + alt - k : yabai -m window --swap north
               shift + alt - j : yabai -m window --swap south
-              alt - b : open -a "Brave Browser" 
+              alt - b : open -a "Brave Browser"
               alt - c : $(yabai -m window $(yabai -m query --windows --window | jq -re ".id") --close)
               alt - return : open -n /Applications/Nix\ Apps/Ghostty.app
             '';
@@ -90,7 +90,16 @@
       # Build darwin flake using:
       # $ darwin-rebuild build --flake .#simple
       darwinConfigurations."simple" = nix-darwin.lib.darwinSystem {
-        modules = [ configuration ];
+        modules = [
+          configuration
+          home-manager.darwinModules.home-manager
+          {
+            home-manager.users.whitehead = import ../home-manager;
+            home-manager.extraSpecialArgs = {
+              inherit pkgs-unstable;
+            };
+          }
+        ];
       };
     };
 }

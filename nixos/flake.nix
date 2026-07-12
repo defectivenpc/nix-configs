@@ -61,7 +61,7 @@
         };
 
       hmModule = {
-        home-manager.users.whitehead = import ../home-manager/home.nix;
+        home-manager.users.whitehead = import ../home-manager;
         home-manager.extraSpecialArgs = {
           inherit pkgs-unstable;
         };
@@ -72,7 +72,7 @@
           hostname,
           extraModules ? [ ],
           extraOverlays ? [ ],
-          includeHM ? false,
+          includeHM ? true,
           includeFacter ? true,
           includeDisko ? true,
           includeSops ? true,
@@ -114,7 +114,6 @@
       nixosConfigurations = {
         mises = mkHost {
           hostname = "mises";
-          includeHM = true;
           extraOverlays = [
             (final: prev: {
               netbird-pinned =
@@ -125,10 +124,7 @@
             })
           ];
         };
-        beara = mkHost {
-          hostname = "beara";
-          includeHM = true;
-        };
+        beara = mkHost { hostname = "beara"; };
         buster = mkHost { hostname = "buster"; };
         authority = mkHost { hostname = "authority"; };
         nas1 = mkHost { hostname = "nas1"; };
