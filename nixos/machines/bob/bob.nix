@@ -1,8 +1,8 @@
 {pkgs, config, ...}:
 {
   imports = [
-    ./lib/base.nix
-    ./hardware/base-hardware.nix
+    ../../lib/base.nix
+    ../../hardware/base-hardware.nix
   ];
 
   networking.hostName = "bob";

@@ -35,6 +35,7 @@
 
     let
       system = "x86_64-linux";
+      lib = nixpkgs.lib;
       pkgs = nixpkgs.legacyPackages.${system};
 
       pkgs-unstable = import nixpkgs-unstable {
@@ -42,132 +43,105 @@
         config.allowUnfree = true;
       };
 
+      standardOverlays =
+        { extraOverlays ? [ ] }:
+        {
+          nixpkgs.overlays = [
+            (final: prev: {
+              unstable = import nixpkgs-unstable {
+                inherit system;
+                config.allowUnfree = true;
+              };
+            })
+          ] ++ extraOverlays;
+          nix.settings = {
+            substituters = [ "https://cosmic.cachix.org/" ];
+            trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
+          };
+        };
+
+      hmModule = {
+        home-manager.users.whitehead = import ../home-manager/home.nix;
+        home-manager.extraSpecialArgs = {
+          inherit pkgs-unstable;
+        };
+      };
+
+      mkHost =
+        {
+          hostname,
+          extraModules ? [ ],
+          extraOverlays ? [ ],
+          includeHM ? false,
+          includeFacter ? true,
+          includeDisko ? true,
+          includeSops ? true,
+        }:
+        nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules =
+            [
+              (standardOverlays { inherit extraOverlays; })
+              ./machines/${hostname}/${hostname}.nix
+            ]
+            ++ lib.optionals includeSops [ sops-nix.nixosModules.sops ]
+            ++ lib.optionals includeFacter [
+              nixos-facter-modules.nixosModules.facter
+              { config.facter.reportPath = ./hardware/facter/${hostname}.json; }
+            ]
+            ++ lib.optionals includeDisko [
+              disko.nixosModules.disko
+              ./machines/${hostname}/disko.nix
+            ]
+            ++ lib.optionals includeHM [
+              home-manager.nixosModules.home-manager
+              hmModule
+            ]
+            ++ extraModules;
+        };
+
+      # Legacy bare-metal hosts: no overlays/sops/facter/disko/HM.
+      mkBareHost =
+        { hostname, extraModules ? [ ] }:
+        nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = [ ./machines/${hostname}/${hostname}.nix ] ++ extraModules;
+        };
+
     in
     {
 
       nixosConfigurations = {
+        mises = mkHost {
+          hostname = "mises";
+          includeHM = true;
+          extraOverlays = [
+            (final: prev: {
+              netbird-pinned =
+                (import nixpkgs-netbird {
+                  inherit system;
+                  config.allowUnfree = true;
+                }).netbird;
+            })
+          ];
+        };
+        beara = mkHost {
+          hostname = "beara";
+          includeHM = true;
+        };
+        buster = mkHost { hostname = "buster"; };
+        authority = mkHost { hostname = "authority"; };
+        nas1 = mkHost { hostname = "nas1"; };
+        nas2 = mkHost { hostname = "nas2"; };
+        sowell = mkHost { hostname = "sowell"; };
+        router = mkHost { hostname = "router"; };
 
-        mises = nixpkgs.lib.nixosSystem rec {
-          system = "x86_64-linux";
-          modules = [
-            {
-              nixpkgs.overlays = [
-                (final: prev: {
-                  unstable = import nixpkgs-unstable {
-                    inherit system;
-                    config.allowUnfree = true;
-                  };
-                  netbird-pinned = (import nixpkgs-netbird {
-                    inherit system;
-                    config.allowUnfree = true;
-                  }).netbird;
-                })
-              ];
-              nix.settings = {
-                substituters = [ "https://cosmic.cachix.org/" ];
-                trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
-              };
-            }
-            sops-nix.nixosModules.sops
-            nixos-facter-modules.nixosModules.facter
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager
-            { config.facter.reportPath = ./hardware/facter/mises.json; }
-            {
-              home-manager.users.whitehead = import ../home-manager/home.nix;
-              home-manager.extraSpecialArgs = {
-                inherit pkgs-unstable;
-              };
-            }
-            ./machines/mises/disko.nix
-            ./machines/mises/mises.nix
-          ];
-        };
-
-        beara = nixpkgs.lib.nixosSystem rec {
-          system = "x86_64-linux";
-          modules = [
-            {
-              nixpkgs.overlays = [
-                (final: prev: {
-                  unstable = import nixpkgs-unstable {
-                    inherit system;
-                    config.allowUnfree = true;
-                  };
-                })
-              ];
-              nix.settings = {
-                substituters = [ "https://cosmic.cachix.org/" ];
-                trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
-              };
-            }
-            sops-nix.nixosModules.sops
-            nixos-facter-modules.nixosModules.facter
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager
-            { config.facter.reportPath = ./hardware/facter/beara.json; }
-            {
-              home-manager.users.whitehead = import ../home-manager/home.nix;
-              home-manager.extraSpecialArgs = {
-                inherit pkgs-unstable;
-              };
-            }
-            ./machines/beara/disko.nix
-            ./machines/beara/beara.nix
-          ];
-        };
-
-        bob = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          modules = [
-            ./bob.nix
-          ];
-        };
-        tom = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          modules = [
-            ./tom.nix
-          ];
-        };
-        sowell = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          modules = [
-            sops-nix.nixosModules.sops
-            nixos-facter-modules.nixosModules.facter
-            disko.nixosModules.disko
-            {
-              _module.args.disks = [ "/dev/nvme0n1" ];
-            }
-            {
-              config.facter.reportPath = ./hardware/facter/sowell.json;
-            }
-            ./disko/basic.nix
-            ./sowell.nix
-          ];
-        };
-        router = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          modules = [
-            sops-nix.nixosModules.sops
-            nixos-facter-modules.nixosModules.facter
-            disko.nixosModules.disko
-            { config.facter.reportPath = ./hardware/facter/router.json; }
-            {
-              _module.args.disks = [ "/dev/nvme0n1" ];
-            }
-            ./disko/basic.nix
-            ./machines/router.nix
-          ];
-        };
-
-        bigtux = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          modules = [
-            ./bigtux.nix
-          ];
-        };
-
+        # Legacy hosts (bare — no facter/disko/sops/HM yet).
+        bob = mkBareHost { hostname = "bob"; };
+        tom = mkBareHost { hostname = "tom"; };
+        bigtux = mkBareHost { hostname = "bigtux"; };
       };
+
       packages.x86_64-linux = rec {
         installIso = nixos-generators.nixosGenerate {
           system = system;
@@ -178,9 +152,6 @@
         };
 
         installTest = pkgs.writeScriptBin "installTest" ''
-          # create tmp directory
-          # decrypt secrets to directory
-          # write ssh keys from secrets to directory
           nix run github:nix-community/nixos-anywhere -- --flake .#router -- --generate-hardware-config nixos-facter ./hardware/facter/router.json --target-host root@192.168.122.130
         '';
 

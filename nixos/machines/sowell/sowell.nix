@@ -1,13 +1,13 @@
 { pkgs, ... }:
 {
   imports = [
-    ./lib/base.nix
-    ./lib/gui.nix
-    ./lib/nvidiagpu.nix
-    ./lib/laptop.nix
-    ./lib/driver.nix
-    ./lib/virtualization.nix
-    ./lib/users.nix
+    ../../lib/base.nix
+    ../../lib/gui.nix
+    ../../lib/nvidiagpu.nix
+    ../../lib/laptop.nix
+    ../../lib/driver.nix
+    ../../lib/virtualization.nix
+    ../../lib/users.nix
   ];
   networking.hostName = "sowell";
   boot.initrd.kernelModules = [
@@ -39,7 +39,7 @@
 
   virtualisation.spiceUSBRedirection.enable = true;
 
-  sops.defaultSopsFile = ./host-secrets/sowell-secrets.yaml;
+  sops.defaultSopsFile = ../../host-secrets/sowell-secrets.yaml;
   sops.secrets.whitehead-password = { };
   sops.secrets.whitehead-password.neededForUsers = true;
 }

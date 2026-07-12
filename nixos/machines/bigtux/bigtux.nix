@@ -7,8 +7,8 @@
 
 {
   imports = [
-    ./hardware/bigtux.nix
-    ./lib/base.nix
+    ../../hardware/bigtux.nix
+    ../../lib/base.nix
   ];
 
   environment.systemPackages = with pkgs; [

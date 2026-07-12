@@ -8,10 +8,10 @@
 {
 
   imports = [
-    ../lib/base.nix
-    ../lib/users.nix
-    ../lib/shell.nix
-    ../lib/sops.nix
+    ../../lib/base.nix
+    ../../lib/users.nix
+    ../../lib/shell.nix
+    ../../lib/sops.nix
   ];
 
   options = {
@@ -842,7 +842,7 @@
         };
       };
 
-      sops.defaultSopsFile = ../host-secrets/router-secrets.yaml;
+      sops.defaultSopsFile = ../../host-secrets/router-secrets.yaml;
       sops.secrets.whitehead-password = { };
       sops.secrets.whitehead-password.neededForUsers = true;
     };

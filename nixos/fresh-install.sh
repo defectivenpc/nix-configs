@@ -23,7 +23,7 @@ echo RUNNING NIXOS-ANYWHERE ON "$HOST"
 
 nix run github:nix-community/nixos-anywhere -- \
   --extra-files "$temp" \
-  --flake "./machines/$HOST#$HOST" \
+  --flake ".#$HOST" \
   --disko-mode disko \
   --phases disko,install,reboot \
   --generate-hardware-config nixos-facter ./hardware/facter/"$HOST".json \
