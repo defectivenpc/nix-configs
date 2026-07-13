@@ -86,6 +86,7 @@
         }:
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
+          specialArgs = { inherit self inputs; };
           modules =
             [
               (standardOverlays { inherit extraOverlays; })
@@ -178,26 +179,48 @@
       # Validate every deploy node at `nix flake check` time.
       checks = builtins.mapAttrs (_: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
 
-      packages.x86_64-linux = rec {
-        installIso = nixos-generators.nixosGenerate {
-          system = system;
-          modules = [
-            ./installIso.nix
-          ];
-          format = "iso";
+      packages.x86_64-linux =
+        let
+          netboot = import ./netboot/lib.nix { inherit inputs system; };
+
+          netbootImages = {
+            rescue = netboot.mkNetbootImage {
+              name = "rescue";
+              extraModules = [ ./netboot/images/rescue.nix ];
+            };
+            installer = netboot.mkNetbootImage {
+              name = "installer";
+              extraModules = [ ./netboot/images/installer.nix ];
+            };
+          };
+        in
+        rec {
+          # Individual netboot images (flattened so each is a derivation
+          # under packages.<system>, satisfying the flake schema).
+          netbootImage-rescue = netbootImages.rescue;
+          netbootImage-installer = netbootImages.installer;
+
+          netbootBundle = netboot.mkNetbootBundle { images = netbootImages; };
+
+          installIso = nixos-generators.nixosGenerate {
+            system = system;
+            modules = [
+              ./installIso.nix
+            ];
+            format = "iso";
+          };
+
+          installTest = pkgs.writeScriptBin "installTest" ''
+            nix run github:nix-community/nixos-anywhere -- --flake .#router -- --generate-hardware-config nixos-facter ./hardware/facter/router.json --target-host root@192.168.122.130
+          '';
+
+          runVM = pkgs.writeScriptBin "runVM" ''
+            ${pkgs.qemu}/bin/qemu-system-x86_64 \
+              -enable-kvm \
+              -m 2048 \
+              -nic user,model=virtio \
+              -cdrom ${installIso}/iso/*.iso
+          '';
         };
-
-        installTest = pkgs.writeScriptBin "installTest" ''
-          nix run github:nix-community/nixos-anywhere -- --flake .#router -- --generate-hardware-config nixos-facter ./hardware/facter/router.json --target-host root@192.168.122.130
-        '';
-
-        runVM = pkgs.writeScriptBin "runVM" ''
-          ${pkgs.qemu}/bin/qemu-system-x86_64 \
-            -enable-kvm \
-            -m 2048 \
-            -nic user,model=virtio \
-            -cdrom ${installIso}/iso/*.iso
-        '';
-      };
     };
 }

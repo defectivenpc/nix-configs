@@ -12,6 +12,7 @@
     ../../lib/users.nix
     ../../lib/shell.nix
     ../../lib/sops.nix
+    ./netboot-server.nix
   ];
 
   options = {

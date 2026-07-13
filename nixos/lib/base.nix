@@ -65,6 +65,7 @@
     smartmontools
     pv
     yubikey-agent
+    deploy-rs
   ];
 
   services.pcscd.enable = true;
