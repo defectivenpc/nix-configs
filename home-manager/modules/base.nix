@@ -57,13 +57,30 @@
 
   home.sessionVariables = {
     SOPS_AGE_KEY_FILE = "$HOME/.config/sops/age/keys.txt";
-    SSH_AUTH_SOCK = "$XDG_RUNTIME_DIR/piv-agent/ssh.socket";
+    SSH_AUTH_SOCK = "$XDG_RUNTIME_DIR/yubikey-agent/yubikey-agent.sock";
   };
 
   programs = {
     ssh = {
       enable = true;
-      matchBlocks."*".forwardAgent = true;
+      enableDefaultConfig = false;
+      matchBlocks."*" = {
+        forwardAgent = true;
+        addKeysToAgent = "no";
+        compression = false;
+        # Keep the connection alive on flaky links.
+        serverAliveInterval = 60;
+        serverAliveCountMax = 3;
+        hashKnownHosts = false;
+        userKnownHostsFile = "~/.ssh/known_hosts";
+        # Persistent multiplexed control connections: first ssh to a host
+        # opens a master; subsequent ssh/scp/rsync reuse it and skip auth
+        # entirely (including YubiKey touch). Master lingers 10m after the
+        # last session exits, then cleans itself up.
+        controlMaster = "auto";
+        controlPath = "~/.ssh/master-%r@%n:%p";
+        controlPersist = "8h";
+      };
     };
 
     direnv = {

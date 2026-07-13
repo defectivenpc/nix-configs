@@ -3,7 +3,6 @@
   imports = [
     ../../lib/base.nix
     ../../lib/shell.nix
-    ../../lib/sops.nix
   ];
 
   networking.hostName = "nas2";
@@ -18,11 +17,16 @@
 
   networking.hostId = "8425e348";
 
+  # Sole owner: systemd-networkd. dhcpcd is disabled to avoid conflicts.
   systemd.network.enable = true;
+  networking.useNetworkd = true;
+  networking.useDHCP = false;
+  systemd.network.wait-online.anyInterface = true;
 
   systemd.network.networks."10-lan-phys-all" = {
-    matchConfig.Name = "enp*";
+    matchConfig.Type = "ether";
     networkConfig.DHCP = "ipv4";
+    linkConfig.RequiredForOnline = "routable";
   };
 
   environment.systemPackages = with pkgs; [
@@ -146,51 +150,30 @@
     };
   };
 
-  sops.defaultSopsFile = ../../host-secrets/nas2.yaml;
-  sops.secrets."ssh_keys/id_ed25519_zfs" = {
-    owner = config.users.users.zfs.name;
-    group = config.users.users.zfs.group;
-  };
-
-  services.syncoid = {
-    enable = true;
-    user = "zfs";
-    commonArgs = [
-      "--no-privilege-elevation"
-      "--no-sync-snap"
-      "--sshoption=StrictHostKeyChecking=off"
-    ];
-    sshKey = config.sops.secrets."ssh_keys/id_ed25519_zfs".path;
-
-    commands."media" = {
-      source = "zfs@nas1.onepunch:storage1/media";
-      target = "storage1/media";
-      extraArgs = [ ];
-
-    };
-
-    commands."repositories" = {
-      source = "zfs@nas1.onepunch:storage1/repositories";
-      target = "storage1/repositories";
-      extraArgs = [ ];
-    };
-
-    commands."ops-backups" = {
-      source = "zfs@nas1.onepunch:storage1/ops-backups";
-      target = "storage1/ops-backups";
-      extraArgs = [ ];
-    };
-
-    commands."project-backups" = {
-      source = "zfs@nas1.onepunch:storage1/project-backups";
-      target = "storage1/project-backups";
-      extraArgs = [ ];
-    };
-
-    commands."share" = {
-      source = "zfs@nas1.onepunch:storage1/share";
-      target = "storage1/share";
-      extraArgs = [ ];
-    };
-  };
+  # nas2 is not currently in use. Its sops file (secrets/nas2.yaml) was
+  # removed during the secrets reorg. Restore both — plus a working host
+  # age key at /var/lib/sops-nix/key.txt — before re-enabling.
+  #
+  # sops.secrets."ssh_keys/id_ed25519_zfs" = {
+  #   sopsFile = ../../secrets/nas2.yaml;
+  #   owner = config.users.users.zfs.name;
+  #   group = config.users.users.zfs.group;
+  # };
+  #
+  # services.syncoid = {
+  #   enable = true;
+  #   user = "zfs";
+  #   commonArgs = [
+  #     "--no-privilege-elevation"
+  #     "--no-sync-snap"
+  #     "--sshoption=StrictHostKeyChecking=off"
+  #   ];
+  #   sshKey = config.sops.secrets."ssh_keys/id_ed25519_zfs".path;
+  #
+  #   commands."media"           = { source = "zfs@nas1.onepunch:storage1/media";           target = "storage1/media";           extraArgs = [ ]; };
+  #   commands."repositories"    = { source = "zfs@nas1.onepunch:storage1/repositories";    target = "storage1/repositories";    extraArgs = [ ]; };
+  #   commands."ops-backups"     = { source = "zfs@nas1.onepunch:storage1/ops-backups";     target = "storage1/ops-backups";     extraArgs = [ ]; };
+  #   commands."project-backups" = { source = "zfs@nas1.onepunch:storage1/project-backups"; target = "storage1/project-backups"; extraArgs = [ ]; };
+  #   commands."share"           = { source = "zfs@nas1.onepunch:storage1/share";           target = "storage1/share";           extraArgs = [ ]; };
+  # };
 }

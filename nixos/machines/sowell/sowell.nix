@@ -21,7 +21,7 @@
 
   hardware.enableAllFirmware = true;
   hardware.firmware = [
-    pkgs.firmwareLinuxNonfree
+    pkgs.linux-firmware
   ];
   swapDevices = [
     {
@@ -38,8 +38,4 @@
   users.groups.libvirtd.members = [ "whitehead" ];
 
   virtualisation.spiceUSBRedirection.enable = true;
-
-  sops.defaultSopsFile = ../../host-secrets/sowell-secrets.yaml;
-  sops.secrets.whitehead-password = { };
-  sops.secrets.whitehead-password.neededForUsers = true;
 }

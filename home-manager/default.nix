@@ -1,12 +1,15 @@
-{ pkgs, lib, ... }:
-let
-  isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
-in
+{
+  pkgs,
+  lib,
+  isDarwin ? false,
+  isHeadless ? false,
+  ...
+}:
 {
   imports = [
     ./modules/base.nix
   ]
-  ++ lib.optionals (!isDarwin) [
+  ++ lib.optionals (!isDarwin && !isHeadless) [
     ./modules/linux
     ./modules/personal
   ];
@@ -41,7 +44,7 @@ in
     '';
   };
 
-  home.pointerCursor = lib.mkIf (!isDarwin) {
+  home.pointerCursor = lib.mkIf (!isDarwin && !isHeadless) {
     gtk.enable = true;
     x11.enable = true;
     name = "Nordzy-cursors";
@@ -49,7 +52,7 @@ in
     size = 24;
   };
 
-  gtk.iconTheme = lib.mkIf (!isDarwin) {
+  gtk.iconTheme = lib.mkIf (!isDarwin && !isHeadless) {
     name = "Nordzy";
     package = pkgs.nordzy-icon-theme;
   };

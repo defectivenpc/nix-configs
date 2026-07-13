@@ -37,12 +37,19 @@ in
     "btrfs"
   ];
 
+  # Sole owner: systemd-networkd. dhcpcd is disabled to avoid conflicts.
   systemd.network.enable = true;
+  networking.useNetworkd = true;
+  networking.useDHCP = false;
+  # Mark online as soon as ANY interface is up, so boot doesn't hang.
+  systemd.network.wait-online.anyInterface = true;
   networking.hostId = "8425e349";
 
+  # DHCP on any wired interface (matches enp7s0 today, plus any renames).
   systemd.network.networks."10-lan" = {
-    matchConfig.Name = "enp7s0";
+    matchConfig.Type = "ether";
     networkConfig.DHCP = "ipv4";
+    linkConfig.RequiredForOnline = "routable";
   };
 
   services.zfs = {
@@ -79,27 +86,6 @@ in
     datasets."storage1/media" = {
       useTemplate = [ "backup" ];
     };
-  };
-
-  users.users.whitehead = {
-    isNormalUser = true;
-    extraGroups = [
-      "wheel"
-      "networkmanager"
-      "video"
-      "docker"
-      "libvirtd"
-      "kvm"
-    ];
-    openssh.authorizedKeys.keys = [
-      "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAlxuKI8DZvdMA7dHTXG9NATaw9D2RGMQqQKwef4m2oeHFI/r+cPHICtC0SYYk6woPSjjZR7PtiP2VSn0eoX3yk= YubiKey #26922176 PIV Slot 9a (touch: cached)"
-    ];
-  };
-
-  users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAlxuKI8DZvdMA7dHTXG9NATaw9D2RGMQqQKwef4m2oeHFI/r+cPHICtC0SYYk6woPSjjZR7PtiP2VSn0eoX3yk= YubiKey #26922176 PIV Slot 9a (touch: cached)"
-    ];
   };
 
   users.users.zfs = {

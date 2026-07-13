@@ -97,6 +97,7 @@
             home-manager.users.whitehead = import ../home-manager;
             home-manager.extraSpecialArgs = {
               inherit pkgs-unstable;
+              isDarwin = true;
             };
           }
         ];

@@ -836,7 +836,7 @@
         avahi = {
           enable = true;
           reflector = true;
-          interfaces = [
+          allowInterfaces = [
             lan1.iface
             lan2.iface
             lan3.iface
@@ -844,8 +844,5 @@
         };
       };
 
-      sops.defaultSopsFile = ../../host-secrets/router-secrets.yaml;
-      sops.secrets.whitehead-password = { };
-      sops.secrets.whitehead-password.neededForUsers = true;
     };
 }

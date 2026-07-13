@@ -1,4 +1,35 @@
-creation_rules:
-  - age: >-
-      age1yubikey1q00kj0ycx49qwmup2xgxyt9z3n4xtr9qp25nhz434kexc6zcj7s5xt475yn
+keys:
+  - &yubikey age1yubikey1qtefvr2wmwmxclr99t27vglfqhv4avp33dexfjg9290z4w458rpvys2ym74
+  - &yubikeymaster2 age1yubikey1q2mpn0sh3636s7ajrhc7aanqava7h475544cyndnp4372u5vnk7gs692vk7
+  - &router age1t4874aqeezfy9q7nzz76dwxzjpnu9n9zlvux8c009tnds9pqqgssvxm70u
+  - &nas1 age1f3zjfdcw766xzhflztq0n0t5u06pvtg96kagxray76a70hmsy95sfrwajr
+  - &mises age1jmzls8h6xxe0lehdzfye2s0xxs3fg3kukzvlkmdxl89f3h0leqwspccha6
 
+creation_rules:
+  - path_regex: nixos/secrets/users\.yaml$
+    key_groups:
+      - age:
+          - *yubikey
+          - *yubikeymaster2
+          - *router
+          - *nas1
+          - *mises
+          # - *beara
+          # - *sowell
+          # - *buster
+
+  # Central inventory of host age keys (used by fresh-install.sh to seed
+  # /var/lib/sops-nix/key.txt during nixos-anywhere install). Yubikey-only —
+  # this file must be decrypted from an operator machine, not from the target.
+  - path_regex: nixos/secrets/hosts\.yaml$
+    key_groups:
+      - age:
+          - *yubikey
+          - *yubikeymaster2
+
+  # Default: yubikey only (safe fallback for any new secrets file).
+  - path_regex: nixos/secrets/.*\.yaml$
+    key_groups:
+      - age:
+          - *yubikey
+          - *yubikeymaster2

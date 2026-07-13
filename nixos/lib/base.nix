@@ -2,7 +2,9 @@
 
 {
 
-  imports = [ ./auto-update.nix ];
+  imports = [
+    ./auto-update.nix
+  ];
 
   services.nixAutoUpdate.enable = true;
 
@@ -62,36 +64,20 @@
     mbuffer
     smartmontools
     pv
-    piv-agent
+    yubikey-agent
   ];
 
   services.pcscd.enable = true;
   services.udev.packages = [ pkgs.yubikey-personalization ];
 
-  systemd.user.sockets.piv-agent = {
-    description = "piv-agent socket activation";
-    socketConfig = {
-      ListenStream = "%t/piv-agent/ssh.socket";
-      SocketMode = "0600";
-      DirectoryMode = "0700";
-      RuntimeDirectory = "piv-agent";
-    };
-    wantedBy = [ "sockets.target" ];
-  };
-
-  systemd.user.services.piv-agent = {
-    description = "piv-agent service";
-    requires = [ "piv-agent.socket" ];
-    after = [ "piv-agent.socket" ];
-    serviceConfig = {
-      ExecStart = "${pkgs.piv-agent}/bin/piv-agent serve --agent-types=ssh=0";
-      Type = "simple";
-    };
-  };
+  # yubikey-agent opens the PIV applet in SCARD_SHARE_SHARED mode and releases
+  # its handle on idle, so age-plugin-yubikey / ykman / sops can access the
+  # card concurrently without stopping the agent.
+  services.yubikey-agent.enable = true;
 
   environment.extraInit = ''
     if [ -z "$SSH_AUTH_SOCK" -a -n "$XDG_RUNTIME_DIR" ]; then
-      export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/piv-agent/ssh.socket"
+      export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/yubikey-agent/yubikey-agent.sock"
     fi
   '';
 

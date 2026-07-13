@@ -122,32 +122,8 @@
     "kvm_amd"
   ];
 
-  # sops.defaultSopsFile = ./host-secrets/mises-secrets.yaml;
-  # sops.secrets.whitehead-password = { };
-  # sops.secrets.whitehead-password.neededForUsers = true;
-  #
   security.polkit.enable = true;
 
-  users.users.whitehead = {
-    isNormalUser = true;
-    extraGroups = [
-      "wheel"
-      "networkmanager"
-      "video"
-      "docker"
-      "libvirtd"
-      "kvm"
-    ];
-    openssh.authorizedKeys.keys = [
-      "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAlxuKI8DZvdMA7dHTXG9NATaw9D2RGMQqQKwef4m2oeHFI/r+cPHICtC0SYYk6woPSjjZR7PtiP2VSn0eoX3yk= YubiKey #26922176 PIV Slot 9a (touch: cached)"
-    ];
-  };
-
-  users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAlxuKI8DZvdMA7dHTXG9NATaw9D2RGMQqQKwef4m2oeHFI/r+cPHICtC0SYYk6woPSjjZR7PtiP2VSn0eoX3yk= YubiKey #26922176 PIV Slot 9a (touch: cached)"
-    ];
-  };
   security.pam.services.kwallet = {
     name = "kwallet";
     enableKwallet = true;

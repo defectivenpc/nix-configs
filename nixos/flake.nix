@@ -17,6 +17,8 @@
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
     home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    deploy-rs.url = "github:serokell/deploy-rs";
+    deploy-rs.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
@@ -30,6 +32,7 @@
       disko,
       sops-nix,
       home-manager,
+      deploy-rs,
       ...
     }@inputs:
 
@@ -60,12 +63,15 @@
           };
         };
 
-      hmModule = {
-        home-manager.users.whitehead = import ../home-manager;
-        home-manager.extraSpecialArgs = {
-          inherit pkgs-unstable;
+      hmModuleFor =
+        { isHeadless ? false }:
+        {
+          home-manager.users.whitehead = import ../home-manager;
+          home-manager.extraSpecialArgs = {
+            inherit pkgs-unstable isHeadless;
+            isDarwin = false;
+          };
         };
-      };
 
       mkHost =
         {
@@ -76,6 +82,7 @@
           includeFacter ? true,
           includeDisko ? true,
           includeSops ? true,
+          isHeadless ? false,
         }:
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
@@ -84,7 +91,10 @@
               (standardOverlays { inherit extraOverlays; })
               ./machines/${hostname}/${hostname}.nix
             ]
-            ++ lib.optionals includeSops [ sops-nix.nixosModules.sops ]
+            ++ lib.optionals includeSops [
+              sops-nix.nixosModules.sops
+              ./lib/users.nix
+            ]
             ++ lib.optionals includeFacter [
               nixos-facter-modules.nixosModules.facter
               { config.facter.reportPath = ./hardware/facter/${hostname}.json; }
@@ -95,7 +105,7 @@
             ]
             ++ lib.optionals includeHM [
               home-manager.nixosModules.home-manager
-              hmModule
+              (hmModuleFor { inherit isHeadless; })
             ]
             ++ extraModules;
         };
@@ -126,17 +136,47 @@
         };
         beara = mkHost { hostname = "beara"; };
         buster = mkHost { hostname = "buster"; };
-        authority = mkHost { hostname = "authority"; };
-        nas1 = mkHost { hostname = "nas1"; };
-        nas2 = mkHost { hostname = "nas2"; };
+        authority = mkHost { hostname = "authority"; isHeadless = true; };
+        nas1 = mkHost { hostname = "nas1"; isHeadless = true; };
+        nas2 = mkHost { hostname = "nas2"; isHeadless = true; };
         sowell = mkHost { hostname = "sowell"; };
-        router = mkHost { hostname = "router"; };
+        router = mkHost { hostname = "router"; isHeadless = true; };
 
         # Legacy hosts (bare — no facter/disko/sops/HM yet).
         bob = mkBareHost { hostname = "bob"; };
         tom = mkBareHost { hostname = "tom"; };
         bigtux = mkBareHost { hostname = "bigtux"; };
       };
+
+      deploy = {
+        # Global defaults — override per-node as needed.
+        sshUser = "root";
+        user = "root";
+        # Keep an activation timeout that's generous for slow hosts, and
+        # let deploy-rs auto-rollback if the new profile fails to come up.
+        autoRollback = true;
+        magicRollback = true;
+        # Confirmation timeout (seconds) after activation; if the operator
+        # loses connectivity before confirming, deploy-rs reverts.
+        confirmTimeout = 180;
+
+        nodes = {
+          router = {
+            hostname = "router.onepunch";
+            profiles.system.path =
+              deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.router;
+          };
+
+          nas1 = {
+            hostname = "nas1.onepunchtech.io";
+            profiles.system.path =
+              deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.nas1;
+          };
+        };
+      };
+
+      # Validate every deploy node at `nix flake check` time.
+      checks = builtins.mapAttrs (_: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
 
       packages.x86_64-linux = rec {
         installIso = nixos-generators.nixosGenerate {

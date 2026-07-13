@@ -1,11 +1,9 @@
 {pkgs, ...}:
 
 {
-  services = {
-    logind = {
-      lidSwitch = "ignore";
-      lidSwitchDocked = "ignore";
-    };
+  services.logind.settings.Login = {
+    HandleLidSwitch = "ignore";
+    HandleLidSwitchDocked = "ignore";
   };
 
   systemd.sleep.extraConfig = ''

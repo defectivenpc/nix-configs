@@ -5,21 +5,17 @@ in
 {
   imports = [ ./sops.nix ];
 
-  users.users.whitehead = {
-    isNormalUser = true;
-    extraGroups = [
-      "wheel"
-      "networkmanager"
-      "video"
-      "docker"
-      "libvirtd"
-      "kvm"
-    ];
-    openssh.authorizedKeys.keys = [ yubikey ];
-    hashedPasswordFile = config.sops.secrets.whitehead-password.path;
+  sops.secrets.family-password = {
+    neededForUsers = true;
   };
 
-  users.users.root = {
+  users.users.family = {
+    isNormalUser = true;
+    extraGroups = [
+      "networkmanager"
+      "video"
+    ];
     openssh.authorizedKeys.keys = [ yubikey ];
+    hashedPasswordFile = config.sops.secrets.family-password.path;
   };
 }

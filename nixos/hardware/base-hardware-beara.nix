@@ -14,6 +14,6 @@
   boot.extraModulePackages = [ ];
   hardware.enableAllFirmware = true;
   hardware.firmware = [
-    pkgs.firmwareLinuxNonfree
+    pkgs.linux-firmware
   ];
 }

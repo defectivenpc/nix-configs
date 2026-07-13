@@ -2,7 +2,7 @@
 
 HOST=$1
 TARGET_IP=$2
-SOPS_FILE=./secrets.yaml
+SOPS_FILE=./secrets/hosts.yaml
 
 echo "Installing $HOST at IP $TARGET_IP"
 

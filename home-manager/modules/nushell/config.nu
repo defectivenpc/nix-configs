@@ -16,7 +16,7 @@ $env.config = {
   }
 }
 
-$env.SSH_AUTH_SOCK = $"($env.XDG_RUNTIME_DIR)/piv-agent/ssh.socket"
+$env.SSH_AUTH_SOCK = $"($env.XDG_RUNTIME_DIR)/yubikey-agent/yubikey-agent.sock"
 
 $env.config.edit_mode = 'vi'
 $env.EDITOR = 'vim'

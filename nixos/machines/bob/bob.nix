@@ -7,9 +7,7 @@
 
   networking.hostName = "bob";
 
-  hardware.opengl = {
-    enable = true;
-  };
+  hardware.graphics.enable = true;
 
   #boot.kernelPackages = pkgs.linuxPackages_latest;
   services.xserver.videoDrivers = ["nvidia"];

@@ -20,6 +20,8 @@ let
 in
 {
 
+  system.stateVersion = "25.11";
+
   boot.kernelPackages = latestKernelPackage;
   boot.zfs.forceImportRoot = false;
 
