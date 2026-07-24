@@ -4,12 +4,11 @@
     ../../lib/base.nix
     ../../lib/gui.nix
     ../../lib/amdgpu.nix
-    #./lib/users.nix
     ../../lib/shell.nix
-    #./lib/sops.nix
     ../../lib/printer.nix
     ../../lib/networking.nix
     ../../lib/virtualization.nix
+    ../../lib/vial.nix
   ];
 
   networking.hostName = "mises";
@@ -19,48 +18,24 @@
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
+    # RDNA4 (RX 9070 XT / gfx1201) needs ROCm 6.5+; stable nixpkgs pins 6.4.3
+    # which enumerates the card but fails at OpenCL context creation. Pull
+    # rocm-clr from unstable to get a version that actually works.
     extraPackages = [
-      pkgs.rocmPackages.clr.icd
+      pkgs.unstable.rocmPackages.clr.icd
+    ];
+    extraPackages32 = [
+      pkgs.unstable.rocmPackages.clr.icd
     ];
   };
 
-  security.pki.certificates = [
-    ''
-      -----BEGIN CERTIFICATE-----
-      MIIFFzCCAv+gAwIBAgIUMFH4MXQ6woC5Nnrpxfw5D2aWwoswDQYJKoZIhvcNAQEL
-      BQAwGzEZMBcGA1UEAwwQQ2F0YWxsYXh5IExhYiBDQTAeFw0yNjA2MDkxNzIzMzRa
-      Fw0zNjA2MDYxNzIzMzRaMBsxGTAXBgNVBAMMEENhdGFsbGF4eSBMYWIgQ0EwggIi
-      MA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDBTlArhhxWWm1pAjcb6Usof9Li
-      36BDASZGFAtZFlCO4cUX5VWDKs1UEPbpqJ7s26gYCK/OGnpMkTRtX69NJpHsIJpr
-      /V1GxAR6dKOFHB/HTjFcp1lHLTw6hVeXnvT0+guEf9Dq6B8d1G0xCa60LMoZp89M
-      d2iMWgj8hu4GYLIAcjO9fSVQDzmboxH1FjmrnntUhE70+rOb3jdtUuEFcvFJgwL/
-      o98Wh4Qog/1tDqpUaINRl3Vc87yzIvjKbl+8bTwhGi3owrjaeE6Ras3StspbFRoQ
-      7Zgt5PbqawTKS3aQwOVKpzF5Qwz6ozHVFF35oURSCmIzPyOu5zfTLuH8s2WKU0o3
-      GyxEwS9SNG/aM05b9smZPtjaXuhWhUGHoJhVjMEZ51TOUZ6Q6LFm1SCjx8cSVX3C
-      fw8DNWR6q1nSVpLp8w/qE+Jhzye4SoSVBgYAGjpjU0O+BxlAHMhLwloXSPcQaKqV
-      4XSu3EECOEZgwfBnER1UZGXGB0ANSTHP3nzKOYEYSC9I3c/MiqIlvuPpXKmdShzX
-      FMlc/ku56r7CTjnxvx0ak3v9Ih1QFr2p+ifzGiRtl5oEke12tbVs/flm/nwzNaAM
-      4j+uYz5hZiHHa+C7qxRhAvblivRUBAUDMgpwg42AOMDeeBGzQrFRwg3zpzoRqQxS
-      Be8pD/gmZbIcuPGmAwIDAQABo1MwUTAdBgNVHQ4EFgQULE3sXEHa0vXj/VT1rh3d
-      UsxM1S4wHwYDVR0jBBgwFoAULE3sXEHa0vXj/VT1rh3dUsxM1S4wDwYDVR0TAQH/
-      BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAgEAjYeGNovoYxn91L4JOdJtxIObMaFp
-      Lyl0ree1JHGXV7v3vjZ1ptdY3Lx1ywKDDAYd7cpGMyTHN6kapKTQF7s9oD3B9KNM
-      6qsN3ljb+vcDkyefRM6HKZ2eBVcF6XmApxVMKxT+4fU/hIb6fvIMbrq8vC12rv39
-      y0Er84KpwN6Dvsf/8UyIJVdv66tqL5V8tsNKdZt1X/dAYHyEHx/hdbT361bxw8oZ
-      L5/xCw3Trqd2SRxNWesLkCEwUaUcquOmLvISItJSWTlC3vYQtII0Yi7DihAKJd3I
-      JlHDFmI412PvdLhlWPunPQA9V165qAW/nGv+Rjwd8gyL8qwqmH88KaAkZ8FPjLui
-      WkJSOgD6wmz0peC0J7wSMr/pFsoK7YJzoX0nuQWwVQUJSJFgPvCg3iCBK1k9ORtS
-      dCoEkiz3y8bUmleDHD6vT+wouRHORL32fUae13oZQWdoN49H/FgbCagnKBwHzbjf
-      J/LG9noRvFIUDGu9t3VQClu4HUUfdmiLp/b5lN+N2ETfcIFyJxP9niVIO53+mzyO
-      Q1R/qEwDc8Cc7rmwhFpeC1ht2oDNim8RRUiIrR0pROCLP/OrNnQIHfbotr9Ldnza
-      PYgII3Sssxvf9r0aPzqt7CAaAcQknTuTOEm66LmFNeftR9kUclMfOBJveWZitQyy
-      J/JgzEU7OGKJ5Uw=
-      -----END CERTIFICATE-----
-    ''
-  ];
+  # Kernel 6.12 has partial RDNA4 support; 6.14+ has the full stack. Pull the
+  # latest kernel from unstable for the same reason as ROCm above.
+  boot.kernelPackages = pkgs.unstable.linuxPackages_latest;
 
   security.pki.certificateFiles = [
     ../../certs/praxiotic-prod-ca.crt
+    ../../certs/praxiotic-local-ca.crt
   ];
 
   nixpkgs.config.allowUnfree = true;

@@ -58,7 +58,18 @@
     wireguard-tools
     screen
     hugo
-    pkgs-unstable.davinci-resolve-studio
+    # DaVinci Resolve's bundled Qt5 can't init its wayland plugin (aborts
+    # in QGuiApplicationPrivate::createPlatformIntegration on cosmic).
+    # Force xcb via XWayland so it launches cleanly.
+    (pkgs.symlinkJoin {
+      name = "davinci-resolve-studio-xcb";
+      paths = [ pkgs-unstable.davinci-resolve-studio ];
+      buildInputs = [ pkgs.makeWrapper ];
+      postBuild = ''
+        wrapProgram $out/bin/davinci-resolve-studio \
+          --set QT_QPA_PLATFORM xcb
+      '';
+    })
     gamescope
   ];
 
