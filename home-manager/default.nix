@@ -1,5 +1,6 @@
 {
   pkgs,
+  pkgs-unstable,
   lib,
   isDarwin ? false,
   isHeadless ? false,
@@ -34,7 +35,9 @@
   home.homeDirectory = if isDarwin then "/Users/whitehead" else "/home/whitehead";
   home.stateVersion = if isDarwin then "25.05" else "24.05";
 
-  home.packages = lib.optionals isDarwin (with pkgs; [ claude-code ]);
+  home.packages = lib.optionals isDarwin [
+    (import ./modules/personal/claude-code.nix { inherit pkgs pkgs-unstable; })
+  ];
 
   home.file = lib.optionalAttrs (!isDarwin) {
     ".config/nixpkgs/config.nix".text = ''

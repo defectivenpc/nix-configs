@@ -1,7 +1,7 @@
-{ pkgs, ... }:
+{ pkgs, pkgs-unstable, ... }:
 
 {
-  home.packages = with pkgs; [
-    claude-code
+  home.packages = [
+    (import ./claude-code.nix { inherit pkgs pkgs-unstable; })
   ];
 }
