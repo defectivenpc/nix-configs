@@ -53,5 +53,7 @@ in
     dosfstools
     btrfs-progs
     zfs
+    # Lays down the GAMECACHE/GAMES partitions the gaming image adopts.
+    (import ../provision-disks.nix { inherit pkgs; })
   ];
 }

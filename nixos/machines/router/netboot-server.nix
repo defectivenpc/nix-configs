@@ -12,6 +12,13 @@
 }:
 
 let
+  # NOTE: this pulls the entire bundle into the router's system closure,
+  # including the gaming image's multi-GB store squashfs — so every deploy-rs
+  # push of the router copies it, and nix.gc keeps 7 days of generations
+  # (lib/base.nix). Check `df` on the router before the first gaming deploy.
+  # If it becomes a problem, serve just the squashfs from nas1 and repoint
+  # netboot.store.url; the URL is already a build-time parameter of the ipxe
+  # script, so that is a one-line change in netboot/lib.nix.
   bundle = self.packages.${pkgs.stdenv.hostPlatform.system}.netbootBundle;
 
   # Router's primary LAN IP — used as `next-server` for clients across all
@@ -26,7 +33,7 @@ in
     root = "${bundle}/tftp";
   };
 
-  # ------------- HTTP: menu + kernels + initrds + memtest -------------
+  # ------------- HTTP: menu + kernels + initrds + memtest + store -------------
   services.nginx = {
     enable = true;
     recommendedGzipSettings = true;
@@ -35,6 +42,21 @@ in
       default = true;
       root = "${bundle}";
       locations."/".extraConfig = "autoindex on;";
+
+      # The gaming image's Nix store is a multi-GB squashfs fetched by the
+      # client's initrd (see ../../netboot/http-store.nix). Serve it as a
+      # plain byte stream: it is already zstd-compressed, so gzipping it on
+      # the way out is pure router CPU for nothing.
+      locations."~ \\.squashfs$".extraConfig = ''
+        gzip off;
+        sendfile on;
+        tcp_nopush on;
+        sendfile_max_chunk 2m;
+        # Range support lets a resumed fetch pick up where it left off.
+        add_header Accept-Ranges bytes;
+        # The filename contains the store hash, so a given URL never changes.
+        add_header Cache-Control "public, max-age=31536000, immutable";
+      '';
     };
   };
 

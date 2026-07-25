@@ -2,11 +2,11 @@
   description = "Darwin system flake for whitehead's mac";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-25.11-darwin";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nix-darwin.url = "github:nix-darwin/nix-darwin/master";
+    nix-darwin.url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
-    home-manager.url = "github:nix-community/home-manager/master";
+    home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
@@ -43,6 +43,11 @@
           system.stateVersion = 6;
 
           nixpkgs.hostPlatform = system;
+
+          users.users.whitehead = {
+            name = "whitehead";
+            home = "/Users/whitehead";
+          };
 
           system.primaryUser = "whitehead";
           system.defaults.dock = {
@@ -89,15 +94,17 @@
     {
       # Build darwin flake using:
       # $ darwin-rebuild build --flake .#simple
-      darwinConfigurations."simple" = nix-darwin.lib.darwinSystem {
+      darwinConfigurations."personal-mac" = nix-darwin.lib.darwinSystem {
         modules = [
           configuration
           home-manager.darwinModules.home-manager
           {
+            home-manager.backupFileExtension = "hm-backup";
             home-manager.users.whitehead = import ../home-manager;
             home-manager.extraSpecialArgs = {
               inherit pkgs-unstable;
               isDarwin = true;
+              isHeadless = false;
             };
           }
         ];

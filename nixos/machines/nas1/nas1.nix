@@ -86,6 +86,13 @@ in
     datasets."storage1/media" = {
       useTemplate = [ "backup" ];
     };
+
+    # Roaming Steam saves for the netbooted gaming image. Small and
+    # irreplaceable, unlike the game files themselves which stay on each
+    # machine's local GAMES partition.
+    datasets."storage1/gaming" = {
+      useTemplate = [ "backup" ];
+    };
   };
 
   users.users.zfs = {
@@ -106,7 +113,36 @@ in
     mountdPort = 4002;
     statdPort = 4000;
     extraNfsdConfig = '''';
+
+    # The other shares are exported imperatively via the ZFS `sharenfs`
+    # property, which writes /etc/exports.d/zfs.exports. This declarative
+    # /etc/exports coexists with that file, so the gaming export can live in
+    # the repo rather than in a shell history somewhere.
+    #
+    # One-time setup on nas1 (the dataset itself is not declarative):
+    #   zfs create -o mountpoint=/mnt/gaming -o compression=zstd \
+    #              -o atime=off storage1/gaming
+    #
+    # all_squash + anonuid/anongid pins every write to the image's `player`
+    # user (uid 1000, gid 100 — see netboot/images/gaming.nix). That sidesteps
+    # root_squash and uid-mismatch entirely for a single-user setup, at the
+    # cost of no per-user separation on this share.
+    #
+    # TODO: narrow this once the gaming machines settle on one VLAN. Right now
+    # they take DHCP from whichever LAN they are plugged into.
+    exports = ''
+      /mnt/gaming  10.10.53.0/24(rw,sync,insecure,no_subtree_check,all_squash,anonuid=1000,anongid=100) 10.10.55.0/24(rw,sync,insecure,no_subtree_check,all_squash,anonuid=1000,anongid=100) 10.10.100.0/24(rw,sync,insecure,no_subtree_check,all_squash,anonuid=1000,anongid=100) 10.10.106.0/24(rw,sync,insecure,no_subtree_check,all_squash,anonuid=1000,anongid=100)
+    '';
   };
+
+  # Created only once /mnt/gaming exists (i.e. after the zfs create above);
+  # tmpfiles silently skips the rules if the parent is missing.
+  systemd.tmpfiles.rules = [
+    "d /mnt/gaming            0755 1000 100 -"
+    "d /mnt/gaming/userdata   0755 1000 100 -"
+    "d /mnt/gaming/config     0755 1000 100 -"
+    "d /mnt/gaming/compatdata 0755 1000 100 -"
+  ];
 
   fileSystems."/nfs" = {
     device = "/mnt/nas";
