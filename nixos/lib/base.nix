@@ -97,6 +97,19 @@
   security.rtkit.enable = true;
 
   services = {
+    # journald's defaults are size-based only (SystemMaxUse ~10% of the
+    # filesystem) with no time limit, so journals otherwise grow until they hit
+    # that cap and keep years of history — the router still had logs from over
+    # a year back. nixpkgs has no dedicated options for these knobs, so they go
+    # through extraConfig; see journald.conf(5).
+    #
+    # These only take effect at rotation. To shrink an existing journal now:
+    #   sudo journalctl --vacuum-time=30d
+    journald.extraConfig = ''
+      SystemMaxUse=500M
+      MaxRetentionSec=1month
+    '';
+
     openssh.enable = true;
     printing.enable = true;
     avahi = {

@@ -208,9 +208,24 @@
           netbootImage-installer = netbootImages.installer;
           netbootImage-gaming = netbootImages.gaming;
 
+          # NOTE: `gaming` is deliberately NOT in the bundle.
+          #
+          # machines/router/netboot-server.nix pulls the bundle into the
+          # router's system closure, so including the gaming image would make
+          # every router deploy carry its ~10 GB closure and — under
+          # `deploy-rs --remote-build` — compress a multi-GB squashfs on the
+          # router itself. That is hours of router CPU for a change that has
+          # nothing to do with netbooting, and it competes with the DNS the
+          # router is meant to be serving.
+          #
+          # The gaming image still builds on its own (`nix build
+          # .#netbootImage-gaming`); it just is not served yet. To serve it,
+          # pick a delivery path first — either build the bundle on a Linux
+          # host and `nix copy` it to the router rather than building there,
+          # or point netboot.store.url at nas1 and let it serve the squashfs.
+          # Then add `gaming` back here plus `disklessImages = [ "gaming" ];`.
           netbootBundle = netboot.mkNetbootBundle {
-            images = netbootImages;
-            disklessImages = [ "gaming" ];
+            images = { inherit (netbootImages) rescue installer; };
             # Explicit: otherwise this is `lib.head names`, i.e. alphabetical,
             # and adding an image silently changes what every PXE client on
             # the network auto-boots after the menu timeout.
