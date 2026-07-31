@@ -1,5 +1,15 @@
 { ... }:
 {
+  # Syntax-highlighted pager for diff/show/log.
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      navigate = true;
+      line-numbers = true;
+    };
+  };
+
   programs.git = {
     enable = true;
     settings = {
@@ -10,7 +20,7 @@
       core = {
         autocrlf = false;
         safecrlf = false;
-        eol = "crlf";
+        eol = "lf";
       };
 
       url = {

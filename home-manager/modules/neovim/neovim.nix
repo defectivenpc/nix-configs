@@ -93,18 +93,30 @@ in
       nodePackages.prettier
       stylua
       nixfmt-rfc-style
+      shfmt
       cuelsp
       gitlabNvimBin
+      # advanced-git-search shells out to these for its pickers/previews.
+      fzf
+      delta
     ];
     plugins = with pkgs.vimPlugins; [
       nvim-lspconfig
       plenary-nvim
       nvim-treesitter.withAllGrammars
+      nvim-treesitter-textobjects
       catppuccin-nvim
       gruvbox-nvim
       oil-nvim
       lualine-nvim
       telescope-nvim
+      # Native C sorter — telescope's Lua fallback gets slow on large trees.
+      telescope-fzf-native-nvim
+      # Backs the <leader>fi mapping in lua/fuzzy-search.lua.
+      advanced-git-search-nvim
+      flash-nvim
+      grug-far-nvim
+      persistence-nvim
       which-key-nvim
       alpha-nvim
       dressing-nvim

@@ -20,6 +20,11 @@
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
     initContent = ''
+      # The dircolors defaults paint other-writable / sticky dirs as dark text on
+      # a solid background (ow=34;42 is blue-on-green), which is unreadable. lsd
+      # inherits LS_COLORS, so drop the backgrounds and keep just the foreground.
+      export LS_COLORS="''${LS_COLORS}:ow=01;34:tw=01;34:st=01;34:su=01;31:sg=01;33:"
+
       if [ -f "$HOME/.secrets.env" ]; then
         source "$HOME/.secrets.env"
       fi
@@ -31,6 +36,21 @@
     shellAliases = {
       ls = "lsd";
       ll = "ls -l";
+    };
+
+    history = {
+      size = 100000;
+      save = 100000;
+      # path is left at the home-manager default (~/.zsh_history) on purpose —
+      # relocating it would orphan the existing history file.
+      ignoreDups = true;
+      ignoreAllDups = true;
+      ignoreSpace = true;
+      expireDuplicatesFirst = true;
+      # Sessions here can live for months, so write history as it happens and
+      # pick up other sessions' commands rather than only flushing on exit.
+      share = true;
+      extended = true;
     };
 
     # Plugins built at eval time from pinned sources — no runtime git clones,

@@ -17,7 +17,7 @@ trap cleanup EXIT
 
 install -d -m755 "$temp/var/lib/sops-nix"
 
-sops -d --extract '["hosts"]["'"$HOST"'"]["age"]["privateKey"]' $SOPS_FILE > "$temp/var/lib/sops-nix/key.txt"
+sops -d --extract '["hosts"]["'"$HOST"'"]["age"]["privateKey"]' $SOPS_FILE >"$temp/var/lib/sops-nix/key.txt"
 
 echo RUNNING NIXOS-ANYWHERE ON "$HOST"
 

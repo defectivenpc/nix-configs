@@ -4,12 +4,12 @@ All sops-encrypted secrets live under this directory. Encryption rules are defin
 
 ## Layout
 
-| File | Purpose | Recipients |
-|---|---|---|
-| `users.yaml` | Shared password hashes (`whitehead-password`, `family-password`) | YubiKey + every host that needs to decrypt user passwords |
-| `hosts.yaml` | Central inventory of per-host age keys; consumed by `../fresh-install.sh` during nixos-anywhere installs | YubiKey only |
-| `authority.yaml` | authority-only extras (YubiKey PIN/PUK, JWK provisioner key) | YubiKey + authority |
-| `nas2.yaml` | nas2-only extras (ZFS syncoid ssh key) | YubiKey + nas2 |
+| File             | Purpose                                                                                                  | Recipients                                                |
+| ---------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `users.yaml`     | Shared password hashes (`whitehead-password`, `family-password`)                                         | YubiKey + every host that needs to decrypt user passwords |
+| `hosts.yaml`     | Central inventory of per-host age keys; consumed by `../fresh-install.sh` during nixos-anywhere installs | YubiKey only                                              |
+| `authority.yaml` | authority-only extras (YubiKey PIN/PUK, JWK provisioner key)                                             | YubiKey + authority                                       |
+| `nas2.yaml`      | nas2-only extras (ZFS syncoid ssh key)                                                                   | YubiKey + nas2                                            |
 
 Additional per-host files should follow the pattern: name them `<host>.yaml`, add a matching `creation_rules` entry to `.sops.yaml` with just YubiKey + that host's age key, then reference them from the host module via `sops.secrets.<name>.sopsFile = ../../secrets/<host>.yaml;`.
 
@@ -160,5 +160,5 @@ sops updatekeys nixos/secrets/users.yaml
 ## Notes / gotchas
 
 - `hosts.yaml` is intentionally YubiKey-only. It contains raw age private keys that are used to bootstrap new machines; no running host should ever be able to decrypt it. Access requires physically inserting the YubiKey on an operator machine.
-- If `sops.secrets.<name>` is declared but the encrypted file doesn't contain that key, sops-nix fails at activation. If you add a new secret name, add its entry to `users.yaml` (or the appropriate host file) *before* rebuilding.
+- If `sops.secrets.<name>` is declared but the encrypted file doesn't contain that key, sops-nix fails at activation. If you add a new secret name, add its entry to `users.yaml` (or the appropriate host file) _before_ rebuilding.
 - Bob, tom, bigtux are currently built with `mkBareHost` (`includeSops = false`), so they don't decrypt anything and don't need to be recipients until you migrate them to `mkHost`.

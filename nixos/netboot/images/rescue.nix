@@ -19,7 +19,11 @@ in
   users.users.whitehead = {
     isNormalUser = true;
     initialHashedPassword = "";
-    extraGroups = [ "wheel" "networkmanager" "video" ];
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "video"
+    ];
     openssh.authorizedKeys.keys = [ yubikey ];
   };
 

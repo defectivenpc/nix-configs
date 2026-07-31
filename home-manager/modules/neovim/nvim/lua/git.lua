@@ -91,4 +91,27 @@ if ok then
 end
 
 require("diffview")
+
+-- setup() calls health.check(), whose check_go_version() does
+-- io.popen("go version") to validate the toolchain it would need to BUILD the
+-- server. We ship a prebuilt one (gitlabNvimBin in neovim.nix) and stub
+-- server.build above, so Go is genuinely not needed here — but the check still
+-- ran on every startup and printed "sh: line 1: go: command not found".
+--
+-- check_go_version is a local, so it can't be replaced directly; health.check
+-- is on the module table. Swap it out for the setup() call only and restore it
+-- afterwards, so `:checkhealth gitlab` still reports the real state.
+local health_ok, health = pcall(require, "gitlab.health")
+local original_check
+if health_ok then
+	original_check = health.check
+	health.check = function()
+		return true
+	end
+end
+
 require("gitlab").setup()
+
+if health_ok and original_check then
+	health.check = original_check
+end

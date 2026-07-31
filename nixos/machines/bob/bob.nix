@@ -1,4 +1,4 @@
-{pkgs, config, ...}:
+{ pkgs, config, ... }:
 {
   imports = [
     ../../lib/base.nix
@@ -10,7 +10,7 @@
   hardware.graphics.enable = true;
 
   #boot.kernelPackages = pkgs.linuxPackages_latest;
-  services.xserver.videoDrivers = ["nvidia"];
+  services.xserver.videoDrivers = [ "nvidia" ];
 
   hardware.nvidia = {
 

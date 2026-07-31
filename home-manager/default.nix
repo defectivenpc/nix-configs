@@ -6,6 +6,14 @@
   isHeadless ? false,
   ...
 }:
+let
+  # Single source of truth: applied to home-manager builds via nixpkgs.config
+  # below, and written verbatim to ~/.config/nixpkgs/config.nix so ad-hoc
+  # nix-shell / nix-env invocations see identical settings.
+  nixpkgsConfig = {
+    allowUnfree = true;
+  };
+in
 {
   imports = [
     ./modules/base.nix
@@ -15,13 +23,7 @@
     ./modules/personal
   ];
 
-  nixpkgs.config = {
-    allowUnfree = true;
-  }
-  // lib.optionalAttrs (!isDarwin) {
-    allowBroken = true;
-    permittedInsecurePackages = [ "openssl-1.0.2u" ];
-  };
+  nixpkgs.config = nixpkgsConfig;
 
   nixpkgs.overlays = lib.optionals isDarwin [
     (_: super: {
@@ -40,11 +42,7 @@
   ];
 
   home.file = lib.optionalAttrs (!isDarwin) {
-    ".config/nixpkgs/config.nix".text = ''
-      {
-        allowUnfree = true;
-      }
-    '';
+    ".config/nixpkgs/config.nix".text = lib.generators.toPretty { } nixpkgsConfig;
   };
 
   home.pointerCursor = lib.mkIf (!isDarwin && !isHeadless) {

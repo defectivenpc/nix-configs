@@ -3,6 +3,7 @@
 {
   imports = [
     ./neovim
+    ./emacs.nix
     ./ghostty.nix
     ./git.nix
     ./zellij.nix
@@ -30,13 +31,11 @@
     docker-compose
     age
     sops
-    nixpkgs-fmt
     nixd
     zip
     dhall
     dhall-json
     semgrep
-    silver-searcher
     unzip
     jdt-language-server
     ripgrep
@@ -52,12 +51,27 @@
     nls
     nix-converter
     glab
+
+    # treefmt (../../treefmt.toml) plus the per-language backends it drives.
+    treefmt
     nixfmt-rfc-style
+    stylua
+    shfmt
+    prettier
+
+    bat
+    just
+    difftastic
+    watchexec
+    tealdeer
   ];
 
+  # SSH_AUTH_SOCK is deliberately NOT set here. nixos/lib/base.nix exports it
+  # only when it is unset, so an inherited agent (e.g. a forwarded one, since
+  # forwardAgent is on below) wins over the local yubikey-agent. Setting it
+  # unconditionally here would override that guard.
   home.sessionVariables = {
     SOPS_AGE_KEY_FILE = "$HOME/.config/sops/age/keys.txt";
-    SSH_AUTH_SOCK = "$XDG_RUNTIME_DIR/yubikey-agent/yubikey-agent.sock";
   };
 
   programs = {
@@ -75,7 +89,7 @@
         userKnownHostsFile = "~/.ssh/known_hosts";
         # Persistent multiplexed control connections: first ssh to a host
         # opens a master; subsequent ssh/scp/rsync reuse it and skip auth
-        # entirely (including YubiKey touch). Master lingers 10m after the
+        # entirely (including YubiKey touch). Master lingers 8h after the
         # last session exits, then cleans itself up.
         controlMaster = "auto";
         controlPath = "~/.ssh/master-%r@%n:%p";
@@ -87,6 +101,22 @@
       enable = true;
       enableZshIntegration = true;
       nix-direnv.enable = true;
+    };
+
+    # Ctrl-R history search, Ctrl-T file insert, Alt-C directory jump.
+    fzf = {
+      enable = true;
+      enableZshIntegration = true;
+    };
+
+    zoxide = {
+      enable = true;
+      enableZshIntegration = true;
+      # `c`, not the default `z` — `z` is the zellij launcher in zellij.nix.
+      options = [
+        "--cmd"
+        "c"
+      ];
     };
     carapace = {
       enable = true;

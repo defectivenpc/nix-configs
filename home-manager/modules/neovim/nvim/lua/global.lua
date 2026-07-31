@@ -12,6 +12,10 @@ opt.smartcase = true
 
 opt.backspace = "indent,eol,start"
 
+-- Undo history survives closing a buffer, and persists across restarts.
+opt.undofile = true
+opt.undolevels = 10000
+
 opt.clipboard:append("unnamedplus")
 
 vim.g.loaded_netrw = 1

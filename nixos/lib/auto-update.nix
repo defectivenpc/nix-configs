@@ -112,71 +112,71 @@ let
       coreutils
     ];
     text = ''
-      set -euo pipefail
+            set -euo pipefail
 
-      STATE="${stateDir}"
-      REPO="${cfg.repoPath}"
-      SUBDIR="${cfg.flakeSubdir}"
-      HOST="${hostname}"
+            STATE="${stateDir}"
+            REPO="${cfg.repoPath}"
+            SUBDIR="${cfg.flakeSubdir}"
+            HOST="${hostname}"
 
-      cmd="''${1:-status}"
+            cmd="''${1:-status}"
 
-      case "$cmd" in
-        status)
-          if [ ! -e "$STATE/last-status" ]; then
-            echo "nix-auto-update: never run"
-            exit 0
-          fi
-          echo "last-status: $(cat "$STATE/last-status")"
-          [ -f "$STATE/next-rev" ] && echo "next-rev:    $(cat "$STATE/next-rev")"
-          [ -f "$STATE/next-built-at" ] && echo "built-at:    $(cat "$STATE/next-built-at")"
-          if [ -L "$STATE/next" ]; then
-            echo "next-path:   $(readlink -f "$STATE/next")"
-          fi
-          ;;
-        diff)
-          if [ ! -L "$STATE/next" ]; then
-            echo "nix-auto-update: no prebuilt system available" >&2
-            exit 1
-          fi
-          nvd diff /run/current-system "$STATE/next"
-          ;;
-        switch)
-          if [ ! -L "$STATE/next" ]; then
-            echo "nix-auto-update: no prebuilt system to switch to" >&2
-            exit 1
-          fi
-          if [ "$(id -u)" -ne 0 ]; then
-            echo "nix-auto-update switch: must run as root (use sudo)" >&2
-            exit 1
-          fi
-          exec /run/current-system/sw/bin/nixos-rebuild switch --flake "$REPO/$SUBDIR#$HOST"
-          ;;
-        run-now)
-          exec systemctl start nix-auto-update.service
-          ;;
-        discard)
-          if [ "$(id -u)" -ne 0 ]; then
-            echo "nix-auto-update discard: must run as root (use sudo)" >&2
-            exit 1
-          fi
-          rm -f "$STATE/next" "$STATE/next-rev" "$STATE/next-built-at" "$STATE/motd"
-          echo "discarded"
-          ;;
-        *)
-          cat <<EOF
-Usage: nix-auto-update <subcommand>
+            case "$cmd" in
+              status)
+                if [ ! -e "$STATE/last-status" ]; then
+                  echo "nix-auto-update: never run"
+                  exit 0
+                fi
+                echo "last-status: $(cat "$STATE/last-status")"
+                [ -f "$STATE/next-rev" ] && echo "next-rev:    $(cat "$STATE/next-rev")"
+                [ -f "$STATE/next-built-at" ] && echo "built-at:    $(cat "$STATE/next-built-at")"
+                if [ -L "$STATE/next" ]; then
+                  echo "next-path:   $(readlink -f "$STATE/next")"
+                fi
+                ;;
+              diff)
+                if [ ! -L "$STATE/next" ]; then
+                  echo "nix-auto-update: no prebuilt system available" >&2
+                  exit 1
+                fi
+                nvd diff /run/current-system "$STATE/next"
+                ;;
+              switch)
+                if [ ! -L "$STATE/next" ]; then
+                  echo "nix-auto-update: no prebuilt system to switch to" >&2
+                  exit 1
+                fi
+                if [ "$(id -u)" -ne 0 ]; then
+                  echo "nix-auto-update switch: must run as root (use sudo)" >&2
+                  exit 1
+                fi
+                exec /run/current-system/sw/bin/nixos-rebuild switch --flake "$REPO/$SUBDIR#$HOST"
+                ;;
+              run-now)
+                exec systemctl start nix-auto-update.service
+                ;;
+              discard)
+                if [ "$(id -u)" -ne 0 ]; then
+                  echo "nix-auto-update discard: must run as root (use sudo)" >&2
+                  exit 1
+                fi
+                rm -f "$STATE/next" "$STATE/next-rev" "$STATE/next-built-at" "$STATE/motd"
+                echo "discarded"
+                ;;
+              *)
+                cat <<EOF
+      Usage: nix-auto-update <subcommand>
 
-Subcommands:
-  status   Print last run status, next-rev, and built-at
-  diff     Show nvd diff between /run/current-system and the prebuilt system
-  switch   Switch to the prebuilt system (requires root)
-  run-now  Trigger the auto-update service immediately
-  discard  Drop the prebuilt system GC root (requires root)
-EOF
-          [ "$cmd" = "help" ] || [ "$cmd" = "--help" ] || [ "$cmd" = "-h" ] || exit 1
-          ;;
-      esac
+      Subcommands:
+        status   Print last run status, next-rev, and built-at
+        diff     Show nvd diff between /run/current-system and the prebuilt system
+        switch   Switch to the prebuilt system (requires root)
+        run-now  Trigger the auto-update service immediately
+        discard  Drop the prebuilt system GC root (requires root)
+      EOF
+                [ "$cmd" = "help" ] || [ "$cmd" = "--help" ] || [ "$cmd" = "-h" ] || exit 1
+                ;;
+            esac
     '';
   };
 

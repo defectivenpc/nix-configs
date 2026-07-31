@@ -18,9 +18,9 @@
       }
 
       if is_dark; then
-        exec zellij -l welcome options --theme gruvbox-dark "$@"
+        exec zellij "$@" options --theme gruvbox-dark
       else
-        exec zellij -l welcome options --theme gruvbox-light "$@"
+        exec zellij "$@" options --theme gruvbox-light
       fi
     '')
 
@@ -30,7 +30,7 @@
     settings = {
       pane_frames = false;
       theme = "gruvbox-dark";
-      default_layout = "compact";
+      default_layout = "welcome";
       show_startup_tips = false;
       mouse_mode = true;
       session_serialization = true;

@@ -29,6 +29,10 @@
     google-chrome
     transmission_4-gtk
     brightnessctl
+    # Screenshot + media keybinds in hyprland.conf.
+    grim
+    slurp
+    playerctl
     zlib
     xsel
     imagemagick
@@ -37,26 +41,27 @@
     pulseaudio
     brave
     chromium
-    ltex-ls
     libreoffice
     vlc
     inkscape-with-extensions
     gimp
     blender
     kdePackages.polkit-kde-agent-1
+    # $fileManager in hyprland.conf — SUPER+E was bound to a binary that was
+    # never installed.
+    kdePackages.dolphin
+    cliphist
+    hyprpicker
+    libnotify
     wdisplays
     deno
     nerd-fonts.dejavu-sans-mono
     lm_sensors
     hyprpanel
-    lazygit
-    lazysql
-    ghostty
     shotcut
     kdePackages.kdenlive
     qidi-slicer-bin
     wireguard-tools
-    screen
     hugo
     # DaVinci Resolve's bundled Qt5 can't init its wayland plugin (aborts
     # in QGuiApplicationPrivate::createPlatformIntegration on cosmic).
@@ -76,6 +81,19 @@
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
+      gtk-theme = "Adwaita-dark";
     };
+  };
+
+  # Dark by default: the portal reports color-scheme=dark (what the `z`
+  # wrapper and browsers query) and GTK apps pick the dark stylesheet.
+  gtk = {
+    enable = true;
+    theme = {
+      name = "Adwaita-dark";
+      package = pkgs.gnome-themes-extra;
+    };
+    gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
+    gtk4.extraConfig.gtk-application-prefer-dark-theme = 1;
   };
 }

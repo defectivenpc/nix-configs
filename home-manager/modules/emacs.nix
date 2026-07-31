@@ -33,7 +33,6 @@
         dhall-mode
         js2-mode
         ac-js2
-        ag
         f
         let-alist
         s
@@ -43,10 +42,12 @@
         json-mode
         writegood-mode
         projectile
-        ag
         helm
         helm-projectile
-        helm-ag
+        # helm-rg, not helm-ag: helm-ag is no longer packaged in nixpkgs, and
+        # the silver-searcher binary it shells out to has been dropped in
+        # favour of ripgrep.
+        helm-rg
         helm-flx
         helm-fuzzier
         helm-tramp
@@ -113,7 +114,7 @@
   };
 
   home.file.".emacs.d" = {
-    source = ./emacs.d;
+    source = ../rawConfigs/emacs.d;
     recursive = true;
     onChange = ''
       rm ~/.emacs.d/init.elc -fv

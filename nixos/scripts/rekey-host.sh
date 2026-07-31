@@ -105,7 +105,7 @@ else
         if (i == last_recip) printf "          - *%s\n", host
       }
     }
-  ' "$SOPS_YAML" > "$tmp/sops-yaml.new" && mv "$tmp/sops-yaml.new" "$SOPS_YAML"
+  ' "$SOPS_YAML" >"$tmp/sops-yaml.new" && mv "$tmp/sops-yaml.new" "$SOPS_YAML"
   echo "    inserted *${HOST} into users.yaml recipients"
 fi
 
@@ -116,14 +116,14 @@ mkdir -p "$SECRETS_DIR"
 
 plain="$tmp/hosts-plain.yaml"
 if [ -f "$HOSTS_FILE" ]; then
-  if ! sops -d "$HOSTS_FILE" > "$plain" 2>"$tmp/sops-err"; then
+  if ! sops -d "$HOSTS_FILE" >"$plain" 2>"$tmp/sops-err"; then
     cat "$tmp/sops-err" >&2
     echo "error: cannot decrypt existing $HOSTS_FILE with current identities." >&2
     echo "       Delete it (rm $HOSTS_FILE) and re-run this script." >&2
     exit 1
   fi
 else
-  echo "hosts: {}" > "$plain"
+  echo "hosts: {}" >"$plain"
 fi
 
 # Merge in this host's key using yq. Setting a multi-line string writes it
@@ -140,7 +140,7 @@ yq_cmd eval -i '
 # Encrypt back into place. Use --filename-override so sops picks the
 # hosts.yaml creation_rule (yubikey-only). Fall back to a rename dance
 # if --filename-override isn't supported.
-if sops -e --filename-override "$HOSTS_FILE" "$plain" > "$HOSTS_FILE.new" 2>/dev/null; then
+if sops -e --filename-override "$HOSTS_FILE" "$plain" >"$HOSTS_FILE.new" 2>/dev/null; then
   mv "$HOSTS_FILE.new" "$HOSTS_FILE"
 else
   cp "$plain" "$HOSTS_FILE"

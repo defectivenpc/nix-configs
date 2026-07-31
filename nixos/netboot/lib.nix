@@ -52,7 +52,10 @@ let
     };
 
   mkNetbootImage =
-    { name, extraModules ? [ ] }:
+    {
+      name,
+      extraModules ? [ ],
+    }:
     let
       sys = lib.nixosSystem {
         inherit system;

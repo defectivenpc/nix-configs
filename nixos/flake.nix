@@ -47,7 +47,9 @@
       };
 
       standardOverlays =
-        { extraOverlays ? [ ] }:
+        {
+          extraOverlays ? [ ],
+        }:
         {
           nixpkgs.overlays = [
             (final: prev: {
@@ -56,7 +58,8 @@
                 config.allowUnfree = true;
               };
             })
-          ] ++ extraOverlays;
+          ]
+          ++ extraOverlays;
           nix.settings = {
             substituters = [ "https://cosmic.cachix.org/" ];
             trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
@@ -64,9 +67,13 @@
         };
 
       hmModuleFor =
-        { isHeadless ? false }:
+        {
+          isHeadless ? false,
+        }:
         {
           home-manager.users.whitehead = import ../home-manager;
+          # Move unmanaged files aside instead of failing activation.
+          home-manager.backupFileExtension = "hm-bak";
           home-manager.extraSpecialArgs = {
             inherit pkgs-unstable isHeadless;
             isDarwin = false;
@@ -87,33 +94,35 @@
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = { inherit self inputs; };
-          modules =
-            [
-              (standardOverlays { inherit extraOverlays; })
-              ./machines/${hostname}/${hostname}.nix
-            ]
-            ++ lib.optionals includeSops [
-              sops-nix.nixosModules.sops
-              ./lib/users.nix
-            ]
-            ++ lib.optionals includeFacter [
-              nixos-facter-modules.nixosModules.facter
-              { config.facter.reportPath = ./hardware/facter/${hostname}.json; }
-            ]
-            ++ lib.optionals includeDisko [
-              disko.nixosModules.disko
-              ./machines/${hostname}/disko.nix
-            ]
-            ++ lib.optionals includeHM [
-              home-manager.nixosModules.home-manager
-              (hmModuleFor { inherit isHeadless; })
-            ]
-            ++ extraModules;
+          modules = [
+            (standardOverlays { inherit extraOverlays; })
+            ./machines/${hostname}/${hostname}.nix
+          ]
+          ++ lib.optionals includeSops [
+            sops-nix.nixosModules.sops
+            ./lib/users.nix
+          ]
+          ++ lib.optionals includeFacter [
+            nixos-facter-modules.nixosModules.facter
+            { config.facter.reportPath = ./hardware/facter/${hostname}.json; }
+          ]
+          ++ lib.optionals includeDisko [
+            disko.nixosModules.disko
+            ./machines/${hostname}/disko.nix
+          ]
+          ++ lib.optionals includeHM [
+            home-manager.nixosModules.home-manager
+            (hmModuleFor { inherit isHeadless; })
+          ]
+          ++ extraModules;
         };
 
       # Legacy bare-metal hosts: no overlays/sops/facter/disko/HM.
       mkBareHost =
-        { hostname, extraModules ? [ ] }:
+        {
+          hostname,
+          extraModules ? [ ],
+        }:
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = [ ./machines/${hostname}/${hostname}.nix ] ++ extraModules;
@@ -137,11 +146,23 @@
         };
         beara = mkHost { hostname = "beara"; };
         buster = mkHost { hostname = "buster"; };
-        authority = mkHost { hostname = "authority"; isHeadless = true; };
-        nas1 = mkHost { hostname = "nas1"; isHeadless = true; };
-        nas2 = mkHost { hostname = "nas2"; isHeadless = true; };
+        authority = mkHost {
+          hostname = "authority";
+          isHeadless = true;
+        };
+        nas1 = mkHost {
+          hostname = "nas1";
+          isHeadless = true;
+        };
+        nas2 = mkHost {
+          hostname = "nas2";
+          isHeadless = true;
+        };
         sowell = mkHost { hostname = "sowell"; };
-        router = mkHost { hostname = "router"; isHeadless = true; };
+        router = mkHost {
+          hostname = "router";
+          isHeadless = true;
+        };
 
         # Legacy hosts (bare — no facter/disko/sops/HM yet).
         bob = mkBareHost { hostname = "bob"; };
@@ -164,14 +185,12 @@
         nodes = {
           router = {
             hostname = "router.onepunch";
-            profiles.system.path =
-              deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.router;
+            profiles.system.path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.router;
           };
 
           nas1 = {
             hostname = "nas1.onepunchtech.io";
-            profiles.system.path =
-              deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.nas1;
+            profiles.system.path = deploy-rs.lib.${system}.activate.nixos self.nixosConfigurations.nas1;
           };
         };
       };

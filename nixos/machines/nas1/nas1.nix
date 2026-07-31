@@ -112,7 +112,7 @@ in
     lockdPort = 4001;
     mountdPort = 4002;
     statdPort = 4000;
-    extraNfsdConfig = '''';
+    extraNfsdConfig = "";
 
     # The other shares are exported imperatively via the ZFS `sharenfs`
     # property, which writes /etc/exports.d/zfs.exports. This declarative

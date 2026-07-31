@@ -1,4 +1,4 @@
-local subst = require('substitute')
+local subst = require("substitute")
 
 vim.keymap.set("n", "s", subst.operator, {})
 vim.keymap.set("n", "ss", subst.line, {})
