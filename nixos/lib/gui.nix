@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
 
@@ -45,15 +50,32 @@
     })
   ];
 
+  # GNOME and Plasma 6 are gone. Neither was ever the session actually used --
+  # Hyprland is -- but both were installed in full, and Plasma's share of that
+  # was not free: drkonqi, its crash handler, kept running under Hyprland and
+  # turned a hypridle restart loop into 1.07 million files (39 GiB) under
+  # ~/.cache/drkonqi. Removing plasma6 takes drkonqi with it, along with the
+  # plasma-* user units that were still being pulled into graphical-session.
+  #
+  # COSMIC stays; it was not part of the ask.
   services = {
-    displayManager = {
-      gdm.enable = true;
-
-    };
     desktopManager = {
       cosmic.enable = true;
-      gnome.enable = true;
-      plasma6.enable = true;
+    };
+
+    # greetd + ReGreet in place of GDM. GDM's greeter *is* gnome-shell, so it
+    # was the single largest thing keeping GNOME installed. ReGreet is one GTK4
+    # window, and being GTK it inherits the same theme/icons/cursor as the
+    # session rather than looking like a stock GNOME login.
+    greetd = {
+      enable = true;
+      settings.default_session = {
+        # The module defaults this to cage, but only with mkDefault. Hyprland
+        # is already built for these hosts, so reusing it avoids pulling in
+        # cage and a second wlroots for the sake of one login window.
+        command = "${lib.getExe config.programs.hyprland.package} --config /etc/greetd/hyprland.conf";
+        user = "greeter";
+      };
     };
 
     system76-scheduler.enable = true;
@@ -69,6 +91,71 @@
     enable = true;
     xwayland.enable = true;
   };
+
+  # $fileManager for hyprland.conf, replacing dolphin. Dolphin is Qt and pulled
+  # ~1.8G of KDE Frameworks behind it for a file browser; thunar is 326M, is GTK
+  # so it matches the rest of the session's theming without a second toolkit to
+  # configure, and is a NixOS module rather than a bare package -- which is what
+  # gets the D-Bus service and the plugins below registered properly.
+  programs.thunar = {
+    enable = true;
+    plugins = with pkgs.xfce; [
+      # Right-click extract/compress.
+      thunar-archive-plugin
+      # Handles removable media (auto-mount, camera/USB actions). Without it
+      # plugging in a drive does nothing visible.
+      thunar-volman
+    ];
+  };
+
+  # Thumbnails. Thunar shows generic icons for every image and video without it.
+  services.tumbler.enable = true;
+
+  # Trash support, plus mounting MTP/SMB/network shares from the sidebar.
+  services.gvfs.enable = true;
+
+  # The greeter runs as the `greeter` user, so it cannot see the home-manager
+  # GTK config and would otherwise come up stock Adwaita/Adwaita/Cantarell --
+  # a light login screen in front of a dark session. Mirror what
+  # home-manager/modules/linux sets for the real session. Setting these via the
+  # module options rather than settings.GTK also gets the theme packages
+  # installed system-wide, which the greeter needs to actually resolve them.
+  programs.regreet = {
+    enable = true;
+    theme = {
+      name = "Adwaita-dark";
+      package = pkgs.gnome-themes-extra;
+    };
+    iconTheme = {
+      name = "Nordzy";
+      package = pkgs.nordzy-icon-theme;
+    };
+    cursorTheme = {
+      name = "Nordzy-cursors";
+      package = pkgs.nordzy-cursor-theme;
+    };
+  };
+
+  # The compositor the greeter runs inside. Deliberately minimal: no wallpaper
+  # daemon, no animations, no logo -- ReGreet paints the whole screen, and
+  # anything else here is just latency between power-on and the password field.
+  #
+  # `hyprctl dispatch exit` is what makes this work as a greeter at all: without
+  # it Hyprland lingers after ReGreet exits and greetd never gets to hand over
+  # to the real session.
+  environment.etc."greetd/hyprland.conf".text = ''
+    misc {
+        disable_hyprland_logo = true
+        disable_splash_rendering = true
+        force_default_wallpaper = 0
+    }
+
+    animations {
+        enabled = false
+    }
+
+    exec-once = ${lib.getExe pkgs.greetd.regreet}; hyprctl dispatch exit
+  '';
 
   # The gtk backend is the only installed portal impl that serves
   # org.freedesktop.appearance (dark mode). It is purely D-Bus activated, so a

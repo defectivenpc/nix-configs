@@ -46,10 +46,13 @@
     inkscape-with-extensions
     gimp
     blender
-    kdePackages.polkit-kde-agent-1
-    # $fileManager in hyprland.conf — SUPER+E was bound to a binary that was
-    # never installed.
-    kdePackages.dolphin
+    # Was kdePackages.polkit-kde-agent-1, which came along with Plasma 6. Plasma
+    # is gone, and something has to answer polkit or every privileged prompt
+    # (mounting a disk, the KDE apps below) silently fails instead of asking.
+    hyprpolkitagent
+    # $fileManager (SUPER+E) is thunar now, enabled as a NixOS module in
+    # nixos/lib/gui.nix — installing it here as a bare package would skip the
+    # D-Bus service registration and its plugins.
     cliphist
     hyprpicker
     libnotify
@@ -59,7 +62,6 @@
     lm_sensors
     hyprpanel
     shotcut
-    kdePackages.kdenlive
     qidi-slicer-bin
     wireguard-tools
     hugo

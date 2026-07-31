@@ -66,6 +66,23 @@
     tealdeer
   ];
 
+  # The NixOS-level nix.gc (nixos/lib/base.nix) runs as root, so it only prunes
+  # /nix/var/nix/profiles. Modern Nix keeps this user's profile and the
+  # home-manager generations under ~/.local/state/nix/profiles, which root's
+  # collector has no idea about — they sat there pinning store paths until
+  # collected by hand. This is the user-level counterpart; matching retention
+  # to the system one keeps the two in step.
+  #
+  # Persistent (the default) matters on the laptops: a weekly timer that fires
+  # while the machine is asleep would otherwise just be skipped.
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 7d";
+    # Don't collide with the root collector, which also runs on a weekly timer.
+    randomizedDelaySec = "45min";
+  };
+
   # SSH_AUTH_SOCK is deliberately NOT set here. nixos/lib/base.nix exports it
   # only when it is unset, so an inherited agent (e.g. a forwarded one, since
   # forwardAgent is on below) wins over the local yubikey-agent. Setting it

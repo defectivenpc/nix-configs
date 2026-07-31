@@ -1,6 +1,23 @@
 { ... }:
 
 {
+  # The upstream unit is `Restart=on-failure` with systemd's stock RestartSec
+  # (100ms) and start limit (5 starts / 10s). When Hyprland exits, hyprpanel
+  # dies with a broken pipe, systemd retries five times inside one second --
+  # every one of them failing `cannot open display' because the next
+  # compositor is not up yet -- and the unit lands in `failed' for good. It
+  # then stays dead through the following session until something restarts it
+  # by hand, which reads as "hyprpanel takes forever to appear".
+  #
+  # exec-shutdown in hyprland.conf now stops graphical-session.target so the
+  # panel is shut down cleanly rather than crash-looping. This is the belt to
+  # that suspenders: back off long enough to outlast a compositor restart, and
+  # never give up permanently.
+  systemd.user.services.hyprpanel = {
+    Unit.StartLimitIntervalSec = 0;
+    Service.RestartSec = 3;
+  };
+
   programs.hyprpanel = {
 
     enable = true;

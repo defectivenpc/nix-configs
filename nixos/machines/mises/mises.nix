@@ -99,11 +99,6 @@
 
   security.polkit.enable = true;
 
-  security.pam.services.kwallet = {
-    name = "kwallet";
-    enableKwallet = true;
-  };
-
   services.netbird = {
     enable = true;
     package = pkgs.netbird-pinned;

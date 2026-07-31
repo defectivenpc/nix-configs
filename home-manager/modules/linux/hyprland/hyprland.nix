@@ -131,15 +131,22 @@ in
   # breaks the moment the package or username moves. A user unit can reference
   # the store path directly, which hyprland.conf cannot (it is read verbatim
   # via builtins.readFile).
-  systemd.user.services.polkit-kde-agent = {
+  #
+  # polkit-kde-agent-1 until Plasma 6 was removed; hyprpolkitagent is the
+  # equivalent that does not drag KDE back in.
+  systemd.user.services.polkit-agent = {
     Unit = {
-      Description = "polkit-kde-authentication-agent-1";
+      Description = "hyprpolkitagent";
       PartOf = [ "graphical-session.target" ];
       After = [ "graphical-session.target" ];
+      # Same reasoning as hyprpanel: don't burn the start limit against a
+      # display that is mid-restart and end up permanently failed.
+      StartLimitIntervalSec = 0;
     };
     Service = {
-      ExecStart = "${pkgs.kdePackages.polkit-kde-agent-1}/libexec/polkit-kde-authentication-agent-1";
+      ExecStart = "${pkgs.hyprpolkitagent}/libexec/hyprpolkitagent";
       Restart = "on-failure";
+      RestartSec = 3;
     };
     Install.WantedBy = [ "graphical-session.target" ];
   };

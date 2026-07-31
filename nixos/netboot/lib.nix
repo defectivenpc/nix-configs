@@ -37,7 +37,9 @@ let
   # would change their pkgs instance and rebuild rescue/installer wholesale
   # for no benefit they currently need.
   netbootNixpkgs =
-    { extraOverlays ? [ ] }:
+    {
+      extraOverlays ? [ ],
+    }:
     {
       nixpkgs.config.allowUnfree = true;
       nixpkgs.overlays = [
@@ -83,7 +85,11 @@ let
   # autologin on tty1 plus installer tooling), neither of which belongs in a
   # desktop image.
   mkHttpStoreImage =
-    { name, extraModules ? [ ], extraOverlays ? [ ] }:
+    {
+      name,
+      extraModules ? [ ],
+      extraOverlays ? [ ],
+    }:
     let
       sys = lib.nixosSystem {
         inherit system;
@@ -124,9 +130,7 @@ let
         # so no server IP is baked in and extra params can be chained in.
         cat > $out/netboot.ipxe <<'EOF'
         #!ipxe
-        kernel bzImage init=${sys.config.system.build.toplevel}/init initrd=initrd ${
-          toString sys.config.boot.kernelParams
-        } netboot.store.url=http://''${next-server}/images/${name}/${storeName} netboot.store.name=${storeName} ''${cmdline}
+        kernel bzImage init=${sys.config.system.build.toplevel}/init initrd=initrd ${toString sys.config.boot.kernelParams} netboot.store.url=http://''${next-server}/images/${name}/${storeName} netboot.store.name=${storeName} ''${cmdline}
         initrd initrd
         boot
         EOF
@@ -139,7 +143,11 @@ let
   #
   # Returns the ISO (hybrid, `dd`-able straight to a stick).
   mkIsoImage =
-    { name, extraModules ? [ ], extraOverlays ? [ ] }:
+    {
+      name,
+      extraModules ? [ ],
+      extraOverlays ? [ ],
+    }:
     (lib.nixosSystem {
       inherit system;
       modules = [
