@@ -1,11 +1,32 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  osConfig,
+  ...
+}:
 
 let
-  # Official NixOS artwork from nixpkgs. Curated and work-safe by provenance —
-  # no fetching images from the open internet at build or run time, and the set
-  # is pinned by the flake lock like everything else.
+  # mises has two AMD GPUs: the discrete Navi 48 at 03:00.0, which both monitors
+  # are plugged into, and the Granite Ridge iGPU at 7b:00.0. Left alone,
+  # aquamarine opens and drives both, so the session pays multi-GPU setup and
+  # buffer-copy costs for a card that has no displays on it. Pin it to the card
+  # that does.
   #
-  # To widen the pool with the GNOME set (photographic, also official/curated),
+  # /dev/dri/dgpu is a udev symlink created in nixos/machines/mises/mises.nix.
+  # AQ_DRM_DEVICES splits its value on ':', so the obvious stable name --
+  # /dev/dri/by-path/pci-0000:03:00.0-card -- is torn into three nonexistent
+  # paths, aquamarine finds no GPU, and Hyprland aborts before it ever opens a
+  # display. Hence a colon-free symlink rather than the by-path name, and not
+  # /dev/dri/card1 either: card numbering is not stable across boots.
+  gpuPin = lib.optionalString (
+    osConfig.networking.hostName == "mises"
+  ) "env = AQ_DRM_DEVICES,/dev/dri/dgpu\n";
+  # Official NixOS artwork from nixpkgs. Pinned by the flake lock like
+  # everything else, and available with no network — this is the fallback pool
+  # the rotation uses when the fetched cache is empty (no API key, no network,
+  # or a fresh machine that hasn't run wallpaper-fetch yet).
+  #
+  # To widen it with the GNOME set (photographic, also official/curated),
   # append `pkgs.gnome-backgrounds` to this list.
   wallpaperPackages =
     let
@@ -51,10 +72,49 @@ let
     cp "$src" "$out"
   '';
 
+  # Builds the motivational set: Pexels photography with a ZenQuotes quote
+  # composited over it. Kept as a separate shell file rather than an inline
+  # nix string because the script is full of `${...}` and `$(...)`, every one
+  # of which would need escaping as `''${...}` inside a nix '' literal.
+  #
+  # The fonts are pinned to store paths rather than passed as family names.
+  # ImageMagick resolves family names through fontconfig, which depends on the
+  # ambient environment of whatever spawned it — fine interactively, not fine
+  # in a user unit that inherits almost nothing.
+  wallpaperFetch = pkgs.writeShellApplication {
+    name = "wallpaper-fetch";
+    runtimeInputs = with pkgs; [
+      curl
+      jq
+      imagemagick
+      coreutils
+      findutils
+    ];
+    text =
+      let
+        dejavu = "${pkgs.dejavu_fonts}/share/fonts/truetype";
+      in
+      ''
+        : "''${WALLPAPER_FONT:=${dejavu}/DejaVuSerif.ttf}"
+        : "''${WALLPAPER_FONT_BOLD:=${dejavu}/DejaVuSerif-Bold.ttf}"
+      ''
+      + builtins.readFile ./wallpaper-fetch.sh;
+  };
+
   # Picks a random wallpaper and cross-fades to it. Used both by the rotation
   # timer and once at session start.
+  #
+  # Prefers the fetched cache and only falls back to the nix pool when it is
+  # empty — mixing the two would put flat NixOS gradients in the same rotation
+  # as photography, which reads as a bug rather than as variety. The fallback
+  # exists so a machine with no API key still gets a wallpaper.
   rotateWallpaper = pkgs.writeShellScript "rotate-wallpaper" ''
-    img=$(${pkgs.findutils}/bin/find -L ${wallpaperPool} -type f | ${pkgs.coreutils}/bin/shuf -n1)
+    cache="''${XDG_CACHE_HOME:-$HOME/.cache}/wallpaper-fetch/images"
+    dir=${wallpaperPool}
+    if [ -n "$(${pkgs.findutils}/bin/find "$cache" -maxdepth 1 -type f -print -quit 2>/dev/null)" ]; then
+      dir="$cache"
+    fi
+    img=$(${pkgs.findutils}/bin/find -L "$dir" -type f | ${pkgs.coreutils}/bin/shuf -n1)
     [ -n "$img" ] || exit 0
     exec ${pkgs.swww}/bin/swww img "$img" \
       --transition-type any --transition-duration 2 --transition-fps 60
@@ -73,9 +133,20 @@ in
           # `idleinhibit fullscreen` window rule); honour it.
           ignore_dbus_inhibit = false;
           ignore_systemd_inhibit = false;
-        };
 
-        lock_cmd = "pidof hyprlock || hyprlock";
+          # hypridle reads this as `general:lock_cmd'. Sitting one level up,
+          # as a sibling of `general', it parsed as an unknown top-level key
+          # and was silently dropped -- the 900s listener logged `Running
+          # loginctl lock-session' and `Got Lock from dbus', then nothing.
+          # The session has not actually been locking on idle.
+          #
+          # Both binaries are pinned to the store because this unit runs with
+          # `Environment=' empty and inherits whatever PATH the systemd user
+          # manager happens to hold; a bare `hyprlock' is not guaranteed to
+          # resolve, and failing to resolve here means failing to lock.
+          # pidof guards against stacking a second instance on repeat Locks.
+          lock_cmd = "${pkgs.procps}/bin/pidof hyprlock || ${pkgs.hyprlock}/bin/hyprlock";
+        };
 
         listener = [
           {
@@ -87,7 +158,23 @@ in
           {
             timeout = 1800; # 30 min
             on-timeout = "hyprctl dispatch dpms off";
-            on-resume = "hyprctl dispatch dpms on";
+            # Blanking here destroys the wl_output globals outright rather
+            # than just powering the panels down -- hypridle's own log shows
+            # `removed iface 63/64' a second after `dpms on', then two fresh
+            # `got iface: wl_output' three seconds later. astal does not
+            # survive that round trip: the bars are torn down and the rebuild
+            # trips `astal_hyprland_monitor_get_id: assertion self != NULL',
+            # leaving hyprpanel with a null monitor ("no window with name
+            # bar-0", "No focused monitor available"). The workspaces module
+            # is the only one that resolves per-monitor, so it alone comes
+            # back empty -- the workspace numbers vanish while the clock and
+            # the system readouts keep updating.
+            #
+            # Nothing reattaches that reference, so the panel has to be
+            # rebuilt. Sleep past the ~3s it takes the outputs to reappear;
+            # restarting into the gap leaves the new instance just as
+            # monitorless as the old one.
+            on-resume = "hyprctl dispatch dpms on && sleep 5 && systemctl --user restart hyprpanel.service";
           }
         ];
       };
@@ -122,6 +209,34 @@ in
         # service's initial run.
         OnActiveSec = "30m";
         Persistent = true;
+      };
+      Install.WantedBy = [ "timers.target" ];
+    };
+
+    services.wallpaper-fetch = {
+      Unit.Description = "Build motivational wallpapers from Pexels + ZenQuotes";
+      Service = {
+        Type = "oneshot";
+        ExecStart = "${wallpaperFetch}/bin/wallpaper-fetch";
+        # Every failure path in the script exits 0 on purpose, so a non-zero
+        # exit here means a real bug rather than a flaky network.
+        TimeoutStartSec = "10m";
+      };
+    };
+
+    # Note there is no WantedBy on the service: the timer alone pulls it in.
+    # Running at session start too would mean a burst of API calls on every
+    # login, and the cache holds days of images — there is nothing to catch up
+    # on at boot.
+    timers.wallpaper-fetch = {
+      Unit.Description = "Refresh the motivational wallpaper cache";
+      Timer = {
+        OnCalendar = "daily";
+        # Missed runs (machine off overnight) fire on next boot rather than
+        # waiting a full day.
+        Persistent = true;
+        # Don't hammer the API the instant the timer is due.
+        RandomizedDelaySec = "30m";
       };
       Install.WantedBy = [ "timers.target" ];
     };
@@ -190,7 +305,7 @@ in
     enable = true;
     package = null;
     portalPackage = null;
-    extraConfig = builtins.readFile ./hyprland.conf;
+    extraConfig = gpuPin + builtins.readFile ./hyprland.conf;
     systemd.enable = true;
   };
 }

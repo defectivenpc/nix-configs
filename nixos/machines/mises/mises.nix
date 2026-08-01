@@ -89,6 +89,14 @@
 
   services.xserver.videoDrivers = [ "amdgpu" ];
 
+  # Stable, colon-free name for the discrete Navi 48 at 03:00.0 (the card the
+  # monitors are on). Consumed by AQ_DRM_DEVICES in the Hyprland config; see
+  # home-manager/modules/linux/hyprland/hyprland.nix for why the stock
+  # /dev/dri/by-path/ name cannot be used there.
+  services.udev.extraRules = ''
+    SUBSYSTEM=="drm", KERNEL=="card[0-9]*", ENV{ID_PATH_TAG}=="pci-0000_03_00_0", SYMLINK+="dri/dgpu"
+  '';
+
   services.resolved.enable = true;
 
   boot.kernelParams = [

@@ -1,6 +1,36 @@
-{ ... }:
+{
+  config,
+  lib,
+  ...
+}:
 
 {
+  # `programs.hyprpanel' installs config.json as a symlink into the store.
+  # hyprpanel opens that path with O_NOFOLLOW, and the kernel answers
+  # O_NOFOLLOW on a symlink with ELOOP no matter how short the chain is --
+  # which is the twice-per-startup "Too many levels of symbolic links" in the
+  # journal. Nothing is actually looping: O_RDONLY on the same path succeeds
+  # and resolves in two hops to a real store file. (O_RDWR gives EACCES
+  # separately, the store being read-only.)
+  #
+  # A regular file satisfies O_NOFOLLOW, so copy the generated config into
+  # place instead of linking it. The upstream module has no option for this
+  # -- xdg.configFile only ever symlinks -- so disable its entry and do the
+  # install by hand. `.source' stays readable with the entry disabled, and
+  # the unit's X-Restart-Triggers still points at it, so the panel continues
+  # to restart when the config changes.
+  #
+  # 0644 rather than the store's 0444 because hyprpanel rewrites this file
+  # itself (upstream sets force = true for exactly that reason). Anything it
+  # writes is clobbered by the next activation -- the usual Nix bargain, and
+  # the same bargain the symlink was already making.
+  xdg.configFile.hyprpanel.enable = lib.mkForce false;
+
+  home.activation.hyprpanelConfig = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    run install -Dm644 ${config.xdg.configFile.hyprpanel.source} \
+      "${config.xdg.configHome}/hyprpanel/config.json"
+  '';
+
   # The upstream unit is `Restart=on-failure` with systemd's stock RestartSec
   # (100ms) and start limit (5 starts / 10s). When Hyprland exits, hyprpanel
   # dies with a broken pipe, systemd retries five times inside one second --
