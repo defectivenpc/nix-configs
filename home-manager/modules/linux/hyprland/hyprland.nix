@@ -18,9 +18,17 @@ let
   # paths, aquamarine finds no GPU, and Hyprland aborts before it ever opens a
   # display. Hence a colon-free symlink rather than the by-path name, and not
   # /dev/dri/card1 either: card numbering is not stable across boots.
+  #
+  # /dev/dri/evdi0 is the DisplayLink virtual card backing the Elgato Prompter
+  # (see nixos/lib/displaylink.nix). It has to be listed explicitly: this
+  # variable is an allowlist, so pinning to the dGPU alone leaves the Prompter
+  # detected by DisplayLinkManager but never scanned out by the compositor --
+  # the black-screen failure everyone hits. The card is pre-created at boot via
+  # evdi's initial_device_count, so this path exists whether or not the
+  # Prompter is actually plugged in, and aquamarine never sees a missing node.
   gpuPin = lib.optionalString (
     osConfig.networking.hostName == "mises"
-  ) "env = AQ_DRM_DEVICES,/dev/dri/dgpu\n";
+  ) "env = AQ_DRM_DEVICES,/dev/dri/dgpu:/dev/dri/evdi0\n";
   # Official NixOS artwork from nixpkgs. Pinned by the flake lock like
   # everything else, and available with no network — this is the fallback pool
   # the rotation uses when the fetched cache is empty (no API key, no network,
@@ -101,6 +109,17 @@ let
       + builtins.readFile ./wallpaper-fetch.sh;
   };
 
+  # Undoes the workspace evacuation that a monitor disconnect causes — see the
+  # header of the script for why `dpms off' counts as a disconnect here.
+  restoreWorkspaces = pkgs.writeShellApplication {
+    name = "restore-workspaces";
+    runtimeInputs = with pkgs; [
+      jq
+      hyprland
+    ];
+    text = builtins.readFile ./restore-workspaces.sh;
+  };
+
   # Picks a random wallpaper and cross-fades to it. Used both by the rotation
   # timer and once at session start.
   #
@@ -174,7 +193,12 @@ in
             # rebuilt. Sleep past the ~3s it takes the outputs to reappear;
             # restarting into the gap leaves the new instance just as
             # monitorless as the old one.
-            on-resume = "hyprctl dispatch dpms on && sleep 5 && systemctl --user restart hyprpanel.service";
+            #
+            # The same teardown strands workspaces on the wrong panel — only
+            # the `default:true' one is pulled back on reconnect — hence the
+            # restore, after the same sleep: it can only move a workspace to a
+            # monitor that is already back.
+            on-resume = "hyprctl dispatch dpms on && sleep 5 && ${restoreWorkspaces}/bin/restore-workspaces && systemctl --user restart hyprpanel.service";
           }
         ];
       };

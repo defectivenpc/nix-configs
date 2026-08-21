@@ -9,6 +9,7 @@
     ../../lib/networking.nix
     ../../lib/virtualization.nix
     ../../lib/vial.nix
+    ../../lib/displaylink.nix
   ];
 
   networking.hostName = "mises";

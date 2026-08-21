@@ -91,8 +91,59 @@
       };
 
       bar.launcher.autoDetectIcon = true;
+
+      # The Prompter is 1024x600 and is there to be read off, not worked on.
+      # An empty layout drops every widget; the layout is looked up by
+      # connector name first (getLayoutForMonitor -> monitor.get_name()), which
+      # is why this is keyed on DVI-I-1 rather than an index. Note the window
+      # itself still exists and stays exclusive, so 43px at the top of the
+      # panel remain reserved -- upstream only drops the `bar` CSS class for an
+      # empty layout, it does not skip the surface.
+      bar.layouts."DVI-I-1" = {
+        left = [ ];
+        middle = [ ];
+        right = [ ];
+      };
+
       bar.workspaces = {
         show_numbered = true;
+
+        # Default is 5, but there are ten workspace binds in hyprland.conf.
+        workspaces = 10;
+
+        # 11 is the Prompter's own workspace (hyprland.conf). It is always
+        # "active" in hyprland's eyes because the screen is always on, so
+        # without this it renders on every bar. Matched as a regex against the
+        # number, hence the anchors -- bare "11" is fine here but would also
+        # hit 110+ if the count ever grew.
+        ignored = "^11$";
+
+        # Both of these exist to route around an upstream bug that this desk
+        # triggers. hyprpanel maps each GTK bar back to a hyprland monitor id
+        # via GdkMonitorService, keyed on `${model}_${width}x${height}_${scale}`.
+        # The two UltraGears are the same model at the same resolution and
+        # scale, so they produce a byte-identical key and are indistinguishable
+        # to it. _matchMonitor has a "don't hand out an id twice" guard, but
+        # its `usedIds` set is allocated per call rather than per sweep, so it
+        # never actually applies across bars. With two monitors the
+        # `id === target` fast path masked this; the Prompter shifted the GDK
+        # indices, one LG started falling through to the relaxed match, and
+        # both LG bars resolved to the same hyprland id -- `hyprctl layers`
+        # showed namespace bar-1 twice and no bar-0, i.e. the left panel's bar
+        # was rendering the right panel's workspaces.
+        #
+        # monitorSpecific = false stops getWorkspaces() filtering by that id at
+        # all: every bar renders 1-10 outright.
+        monitorSpecific = false;
+
+        # ...and showAllActive = false stops renderClassnames() consulting
+        # get_monitor(<that same broken id>).activeWorkspace, which would put
+        # the highlight back on the wrong screen. Only the globally focused
+        # workspace is highlighted now, which is monitor-independent and
+        # therefore always correct. The cost is that a monitor's active-but-
+        # unfocused workspace is no longer marked -- worth it over marking the
+        # wrong one.
+        showAllActive = false;
       };
 
       #bar.customModules.cpuTemp.sensor = "/sys/devices/pci0000:00/0000:00:18.3/hwmon/hwmon1/temp1_input";

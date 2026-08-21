@@ -1,2 +1,10 @@
 result
 .temp-secrets/
+
+# Unfree DisplayLink driver blob (Elgato Prompter, see nixos/lib/displaylink.nix).
+# EULA-gated, so it can't be fetched by Nix -- it has to be downloaded by hand
+# and added to the store with `nix-store --add-fixed sha256`. Kept out of git,
+# but worth keeping on disk: if the store path is ever garbage-collected, the
+# rebuild fails until it's re-added.
+DisplayLink*.zip
+displaylink-*.zip
