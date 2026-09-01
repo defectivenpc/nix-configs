@@ -454,6 +454,25 @@ ${lib.optionalString enableFlowOffload ''
                   "https://nsfw.oisd.nl"
                   "https://github.com/ppfeufer/adguard-filter-list/blob/master/blocklist?raw=true"
                 ];
+
+            # Allowlist. These replace (not append to) whatever has been added
+            # through the web UI, because yaml-merge in the module's preStart
+            # overwrites lists wholesale — so anything added by hand there has
+            # to be mirrored here or it disappears on the next rebuild.
+            #
+            # The ppfeufer list classifies error-reporting backends as
+            # telemetry and blocks ||sentry.io^, ||sentry-cdn.com^ and
+            # ||app.glitchtip.com^. That is fine for third-party sites phoning
+            # home, but it also kills our own crash reporting: AdGuard answers
+            # 0.0.0.0 and the SDK drops every event without surfacing an error.
+            # ||sentry.io^ covers the per-org ingest hosts too
+            # (o<id>.ingest.sentry.io, o<id>.ingest.us.sentry.io, ...).
+            user_rules = [
+              "@@||search.brave.com^$important"
+              "@@||sentry.io^$important"
+              "@@||sentry-cdn.com^$important"
+              "@@||glitchtip.com^$important"
+            ];
           };
 
           # tls = {

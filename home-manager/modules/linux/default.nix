@@ -4,6 +4,7 @@
 
   imports = [
     ./hyprland
+    ./davinci-resolve-mcp.nix
   ];
 
   home.packages = with pkgs; [
