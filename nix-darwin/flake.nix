@@ -1,5 +1,5 @@
 {
-  description = "Darwin system flake for whitehead's mac";
+  description = "Darwin system flake shared across whitehead's macs";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-25.11-darwin";
@@ -19,95 +19,68 @@
       home-manager,
     }:
     let
+      inherit (nixpkgs) lib;
+
       system = "aarch64-darwin";
       pkgs-unstable = import nixpkgs-unstable {
         inherit system;
         config.allowUnfree = true;
       };
 
-      configuration =
-        { pkgs, ... }:
+      mkMac =
         {
-          imports = [
-            ../modules/base.nix
-          ];
-          environment.systemPackages = with pkgs; [
-            neovim
-            home-manager
-            ghostty-bin
-          ];
+          primaryUser,
+          users,
+          extraModules ? [ ],
+        }:
+        nix-darwin.lib.darwinSystem {
+          modules = [
+            ../modules/darwin/base.nix
+            home-manager.darwinModules.home-manager
+            {
+              nixpkgs.hostPlatform = system;
+              system.configurationRevision = self.rev or self.dirtyRev or null;
 
-          nix.settings.experimental-features = "nix-command flakes";
+              system.primaryUser = primaryUser;
 
-          system.configurationRevision = self.rev or self.dirtyRev or null;
-          system.stateVersion = 6;
+              users.users = lib.genAttrs users (user: {
+                name = user;
+                home = "/Users/${user}";
+              });
 
-          nixpkgs.hostPlatform = system;
-
-          users.users.whitehead = {
-            name = "whitehead";
-            home = "/Users/whitehead";
-          };
-
-          system.primaryUser = "whitehead";
-          system.defaults.dock = {
-            static-only = true;
-            autohide = true;
-          };
-
-          services.yabai = {
-            enable = true;
-
-            config = {
-              focus_follows_mouse = "autoraise";
-              mouse_follows_focus = "off";
-              window_placement = "second_child";
-              window_opacity = "off";
-              top_padding = 0;
-              bottom_padding = 5;
-              left_padding = 5;
-              right_padding = 5;
-              window_gap = 5;
-              layout = "bsp";
-            };
-          };
-
-          services.skhd = {
-            enable = true;
-            skhdConfig = ''
-              alt - h : yabai -m window --focus west
-              alt - l : yabai -m window --focus east
-              alt - k : yabai -m window --focus north
-              alt - j : yabai -m window --focus south
-              shift + alt - h : yabai -m window --swap west
-              shift + alt - l : yabai -m window --swap east
-              shift + alt - k : yabai -m window --swap north
-              shift + alt - j : yabai -m window --swap south
-              alt - b : open -a "Brave Browser"
-              alt - c : $(yabai -m window $(yabai -m query --windows --window | jq -re ".id") --close)
-              alt - return : open -n /Applications/Nix\ Apps/Ghostty.app
-            '';
-          };
-
+              home-manager.backupFileExtension = "hm-bak";
+              home-manager.extraSpecialArgs = {
+                inherit pkgs-unstable;
+                isDarwin = true;
+                isHeadless = false;
+              };
+              home-manager.users = lib.genAttrs users (user: {
+                imports = [ ../home-manager ];
+                _module.args.username = user;
+              });
+            }
+          ]
+          ++ extraModules;
         };
     in
     {
-      # Build darwin flake using:
-      # $ darwin-rebuild build --flake .#simple
-      darwinConfigurations."personal-mac" = nix-darwin.lib.darwinSystem {
-        modules = [
-          configuration
-          home-manager.darwinModules.home-manager
-          {
-            home-manager.backupFileExtension = "hm-backup";
-            home-manager.users.whitehead = import ../home-manager;
-            home-manager.extraSpecialArgs = {
-              inherit pkgs-unstable;
-              isDarwin = true;
-              isHeadless = false;
-            };
-          }
-        ];
+      lib.mkMac = mkMac;
+
+      darwinModules = {
+        base = ../modules/darwin/base.nix;
+        input = ../modules/darwin/input.nix;
+        tiling = ../modules/darwin/tiling.nix;
+      };
+
+      templates.work = {
+        path = ./templates/work;
+        description = "Private per-laptop overlay flake for a work mac";
+      };
+
+      darwinConfigurations."personal-mac" = mkMac {
+        primaryUser = "whitehead";
+        users = [ "whitehead" ];
+        extraModules = [ ../modules/darwin/tiling.nix ];
       };
     };
 }

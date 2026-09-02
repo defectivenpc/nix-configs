@@ -77,6 +77,7 @@
           home-manager.extraSpecialArgs = {
             inherit pkgs-unstable isHeadless;
             isDarwin = false;
+            username = "whitehead";
           };
         };
 

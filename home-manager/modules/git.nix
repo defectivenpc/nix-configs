@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
   # Syntax-highlighted pager for diff/show/log.
   programs.delta = {
@@ -14,8 +14,8 @@
     enable = true;
     settings = {
 
-      user.email = "onepunchlinux@gmail.com";
-      user.name = "Michael Whitehead";
+      user.email = lib.mkDefault "onepunchlinux@gmail.com";
+      user.name = lib.mkDefault "Michael Whitehead";
 
       core = {
         autocrlf = false;

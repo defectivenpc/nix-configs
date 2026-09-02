@@ -4,6 +4,7 @@
   lib,
   isDarwin ? false,
   isHeadless ? false,
+  username,
   ...
 }:
 let
@@ -33,8 +34,8 @@ in
     })
   ];
 
-  home.username = "whitehead";
-  home.homeDirectory = if isDarwin then "/Users/whitehead" else "/home/whitehead";
+  home.username = username;
+  home.homeDirectory = if isDarwin then "/Users/${username}" else "/home/${username}";
   home.stateVersion = if isDarwin then "25.05" else "24.05";
 
   home.packages = lib.optionals isDarwin [
