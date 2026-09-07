@@ -31,6 +31,7 @@
         {
           primaryUser,
           users,
+          withClaudeCode ? false,
           extraModules ? [ ],
         }:
         nix-darwin.lib.darwinSystem {
@@ -50,7 +51,7 @@
 
               home-manager.backupFileExtension = "hm-bak";
               home-manager.extraSpecialArgs = {
-                inherit pkgs-unstable;
+                inherit pkgs-unstable withClaudeCode;
                 isDarwin = true;
                 isHeadless = false;
               };
@@ -80,6 +81,7 @@
       darwinConfigurations."personal-mac" = mkMac {
         primaryUser = "whitehead";
         users = [ "whitehead" ];
+        withClaudeCode = true;
         extraModules = [ ../modules/darwin/tiling.nix ];
       };
     };

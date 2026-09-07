@@ -4,6 +4,7 @@
   lib,
   isDarwin ? false,
   isHeadless ? false,
+  withClaudeCode ? false,
   username,
   ...
 }:
@@ -38,7 +39,7 @@ in
   home.homeDirectory = if isDarwin then "/Users/${username}" else "/home/${username}";
   home.stateVersion = if isDarwin then "25.05" else "24.05";
 
-  home.packages = lib.optionals isDarwin [
+  home.packages = lib.optionals (isDarwin && withClaudeCode) [
     (import ./modules/personal/claude-code.nix { inherit pkgs pkgs-unstable; })
   ];
 
