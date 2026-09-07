@@ -8,6 +8,7 @@
     ./git.nix
     ./zellij.nix
     ./zsh.nix
+    ./yubikey-agent.nix
     ./development/java.nix
   ];
 
@@ -83,10 +84,11 @@
     randomizedDelaySec = "45min";
   };
 
-  # SSH_AUTH_SOCK is deliberately NOT set here. nixos/lib/base.nix exports it
-  # only when it is unset, so an inherited agent (e.g. a forwarded one, since
-  # forwardAgent is on below) wins over the local yubikey-agent. Setting it
-  # unconditionally here would override that guard.
+  # SSH_AUTH_SOCK is deliberately NOT set here. nixos/lib/base.nix and
+  # ./yubikey-agent.nix (darwin) each export it only when it is unset, so an
+  # inherited agent (e.g. a forwarded one, since forwardAgent is on below) wins
+  # over the local yubikey-agent. Setting it unconditionally here would
+  # override that guard.
   home.sessionVariables = {
     SOPS_AGE_KEY_FILE = "$HOME/.config/sops/age/keys.txt";
   };
