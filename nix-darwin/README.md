@@ -124,7 +124,15 @@ untracked `local.nix` is invisible to `darwin-rebuild` and the import fails.
 **3. First switch, as `admin-mwhitehead`.** `darwin-rebuild` does not exist yet,
 so it gets run straight out of the flake. The `safe.directory` line is needed
 because the checkout is owned by `mwhitehead`, and git refuses to touch a repo
-owned by another user:
+owned by another user.
+
+Keep the `--global`. Without it git resolves the scope as local, and outside a
+repo that fails with the fairly unhelpful `fatal: not in a git directory`. This
+is a one-shot bootstrap command: `local.nix` declares the same `safe.directory`
+for both accounts, but home-manager has not run yet at this point. Afterwards it
+has, and `~/.config/git/config` is a read-only store symlink — git writes
+`--global` there when it exists, so re-running this later fails with
+`error: could not lock config file`. Change the declared value instead.
 
 ```sh
 su - admin-mwhitehead

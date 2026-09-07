@@ -6,6 +6,7 @@
       programs.git.settings = {
         user.email = "you@work.example";
         user.name = "Michael Whitehead";
+        safe.directory = [ "/Users/Shared/nix-work" ];
       };
 
       home.packages = with pkgs; [
