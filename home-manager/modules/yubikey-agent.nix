@@ -29,9 +29,11 @@ in
     };
 
     home.sessionVariablesExtra = ''
-      if [ -z "$SSH_AUTH_SOCK" ]; then
-        export SSH_AUTH_SOCK="${socket}"
-      fi
+      case "$SSH_AUTH_SOCK" in
+        "" | /var/run/com.apple.launchd.*/Listeners)
+          export SSH_AUTH_SOCK="${socket}"
+          ;;
+      esac
     '';
   };
 }
